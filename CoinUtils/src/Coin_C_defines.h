@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: Coin_C_defines.h 1977 2017-08-14 08:45:14Z forrest $ */
 /*
   Copyright (C) 2002, 2003 International Business Machines Corporation
   and others.  All Rights Reserved.
@@ -90,6 +90,7 @@ typedef void Sbb_Model;
 class Cbc_MessageHandler;
 typedef struct {
   OsiClpSolverInterface * solver_;
+  CbcSolverUsefulData *cbcData;
   CbcModel              * model_;
   Cbc_MessageHandler    * handler_;
   std::vector<std::string> cmdargs_;
