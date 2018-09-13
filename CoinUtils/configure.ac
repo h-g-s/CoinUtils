@@ -2,7 +2,7 @@
 # All Rights Reserved.
 # This file is distributed under the Eclipse Public License.
 
-## $Id$
+## $Id: configure.ac 1779 2015-01-17 03:36:52Z tkr $
 
 # Author:  Andreas Waechter            IBM    2006-04-13
 
