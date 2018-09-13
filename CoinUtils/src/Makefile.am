@@ -92,7 +92,16 @@ libCoinUtils_la_SOURCES = \
 	CoinWarmStartBasis.cpp CoinWarmStartBasis.hpp \
 	CoinWarmStartVector.cpp CoinWarmStartVector.hpp \
 	CoinWarmStartDual.cpp CoinWarmStartDual.hpp \
-	CoinWarmStartPrimalDual.cpp CoinWarmStartPrimalDual.hpp
+	CoinWarmStartPrimalDual.cpp CoinWarmStartPrimalDual.hpp \
+	cgraph.c cgraph.h \
+	build_cgraph.cpp build_cgraph.hpp \
+	bron_kerbosch.cpp bron_kerbosch.h \
+	macros.h \
+	memory.c memory.h \
+	str_utils.c str_utils.h \
+	vectormgm.c vectormgm.h \
+	clique.c clique.h \
+	containers.c containers.h
 
 # List all additionally required libraries
 if DEPENDENCY_LINKING
