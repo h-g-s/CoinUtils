@@ -11,8 +11,6 @@
 
 typedef struct _CGraph CGraph;
 
-typedef struct _NeighIterator NeighIterator;
-
 /**
  * starts a new conflict graph prepared to work
  * initially with "columns" columns
@@ -32,30 +30,17 @@ void cgraph_update_min_max_degree( CGraph *cgraph );
  * degree can be overestimated */
 void cgraph_recompute_degree( CGraph *cgraph );
 
-/***
- * creates a preprocessed conflict graph,
- * which will have a subset of nodes
- * nindexes indicates for a given node i
- * the new index in the preprocessed
- * conflict graph
- **/
-CGraph *cgraph_preprocess( const CGraph *cgraph, int nindexes[] );
-
 /**
  * creates as subgraph induced by vertices
- * in vector nindexes some indices i will have nindexes[i] == -1
- * these nodes will not be included in the new subgraph
  **/
-CGraph *cgraph_create_induced_subgraph( const CGraph *cgraph, const int nindexes[] );
+CGraph *cgraph_create_induced_subgraph( const CGraph *cgraph, const int *idxs, const int n );
 
 /**
  * adds all nodes in conflicts
  * as conflicting nodes for node
  * if necessary, increases the number of columns
  **/
-void cgraph_add_node_conflicts( CGraph *cgraph, const int node, const int conflicts[], const int size );
-
-void cgraph_add_node_conflict( CGraph *cgraph, const int node1, const int node2 );
+void cgraph_add_node_conflicts( CGraph *cgraph, const int node, const int *conflicts, const int size );
 
 int cgraph_degree( const CGraph *cgraph, const int node );
 
@@ -73,12 +58,14 @@ const int *cgraph_get_original_node_indexes( const CGraph *cgraph );
  * if necessary, increases the number of columns
  * this version is faster because of there is a conflict (i,j) it does not cares for inserting (j,i)
  **/
-void cgraph_add_node_conflicts_no_sim( CGraph *cgraph, const int node, const int conflicts[], const int size );
+void cgraph_add_node_conflicts_no_sim( CGraph *cgraph, const int node, const int *conflicts, const int size );
 
 /**
  * adds a clique of conflicts
  **/
-void cgraph_add_clique( CGraph *cgraph, const int *clique, const int size );
+void cgraph_add_clique(CGraph *cgraph, const int *idxs, const int size);
+
+void cgraph_add_clique_as_normal_conflicts(CGraph *cgraph, const int *idxs, const int size);
 
 /**
  * answers if two nodes are
@@ -91,17 +78,7 @@ int cgraph_conflicting_nodes( const CGraph *cgraph, const int i, const int j );
  * returns the number of conflicting nodes or
  * aborts if more than maxSize neighs are found
  **/
-int cgraph_get_all_conflicting( const CGraph *cgraph, int node, int neighs[], int maxSize );
-
-/**
- * fills first n conflicting nodes
- *
- * v is a temporary vector for processing and
- * vcap is its capacity
- * if vcap is not enough aborts with error
- */
-int cgraph_get_n_conflicting( const CGraph *cgraph, int node, int neighs[], int n,
-                              int v[], const int vcap );
+int cgraph_get_all_conflicting( const CGraph *cgraph, int node, int *neighs, int maxSize );
 
 /**
  * returns the size of the conflict graph
@@ -144,7 +121,7 @@ void cgraph_save( CGraph *cgraph, const char *fileName );
 /**
  * for debugging purposes
  **/
-void cgraph_print( CGraph *cgraph, const int w[] );
+void cgraph_print( CGraph *cgraph, const int *w );
 
 void cgraph_print_summary( CGraph *cgraph, const char *name );
 
@@ -155,22 +132,7 @@ void cgraph_set_low_degree( CGraph *cgraph, const int lowDegree );
  **/
 void cgraph_free( CGraph **cgraph );
 
-/* creates an object which will be used to
- * iterate through neighbors of nodes
- * returning first those with the smallest
- * degree
- */
-NeighIterator *nit_create( );
-
-/* starts iterating in a node */
-void nit_start( NeighIterator *nit, const CGraph *cgraph, int node, const int costs[] );
-
-/* returns next neighbor or
- * INT_MAX if this is the end of
- * the list */
-int nit_next( NeighIterator *nit );
-
-void nit_free( NeighIterator **nit );
+int cgraph_get_best_n_neighbors(const CGraph *cgraph, int node, const double *costs, int *neighs, int maxSize);
 
 /**
  * DEBUG
@@ -178,7 +140,6 @@ void nit_free( NeighIterator **nit );
 #ifdef DEBUG
 void cgraph_check_node_cliques( const CGraph *cgraph );
 void cgraph_check_neighs( const CGraph *cgraph );
-void cgraph_check_preproc( const CGraph *ppgraph, const CGraph *cgraph );
 #endif
 
 #endif

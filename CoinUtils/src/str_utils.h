@@ -1,4 +1,3 @@
-#include <ctype.h>
 
 /**
  * removes spaces at the beginning of a line
@@ -32,7 +31,7 @@ char* strRemoveSpsEol( char *str );
 char charIsInvisible( const char c );
 
 int splitString( char **columns, const char *str, const char delimiter,
-                 const int maxColumns, const int columnSize, const char multDel );
+                 const int maxColumns, const char multDel );
 
 /* to align at right */
 void strFillSpacesLeft( char *dest, const char *str, int n );
@@ -44,7 +43,7 @@ void strFillSpacesRight( char *dest, const char *str, int n );
 void strFillSpaces_both( char *dest, const char *str, int n );
 
 /* remove repeated spacing characters (e.g. spaces of tabs ) */
-void strRemoveDblSpaces( char *str );
+char* strRemoveDblSpaces( char *str );
 
 /* clear all spaces in a string */
 char *strClearSpaces(char *str);

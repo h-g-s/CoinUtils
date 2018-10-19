@@ -93,15 +93,15 @@ libCoinUtils_la_SOURCES = \
 	CoinWarmStartVector.cpp CoinWarmStartVector.hpp \
 	CoinWarmStartDual.cpp CoinWarmStartDual.hpp \
 	CoinWarmStartPrimalDual.cpp CoinWarmStartPrimalDual.hpp \
-	cgraph.c cgraph.h \
-	build_cgraph.cpp build_cgraph.hpp \
-	bron_kerbosch.cpp bron_kerbosch.h \
-	macros.h \
-	memory.c memory.h \
-	str_utils.c str_utils.h \
-	vectormgm.c vectormgm.h \
-	clique.c clique.h \
-	containers.c containers.h
+	bron_kerbosch.h bron_kerbosch.cpp \
+	build_cgraph.h build_cgraph.cpp \
+	cgraph.h cgraph.cpp \
+	clique.h clique.cpp \
+	clique_extender.h clique_extender.cpp \
+	clique_separation.h clique_separation.cpp \
+	cut.h cut.cpp \
+	str_utils.h str_utils.cpp \
+	vint_set.h vint_set.cpp 
 
 # List all additionally required libraries
 if DEPENDENCY_LINKING
@@ -113,7 +113,7 @@ libCoinUtils_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = $(GLPK_CFLAGS)
+AM_CPPFLAGS = $(GLPK_CFLAGS) -DCOIN_CGRAPH
 
 # This line is necessary to allow VPATH compilation
 DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)`
