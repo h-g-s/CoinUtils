@@ -184,7 +184,8 @@ includecoin_HEADERS = \
 	CoinWarmStartBasis.hpp \
 	CoinWarmStartVector.hpp \
 	CoinWarmStartDual.hpp \
-	CoinWarmStartPrimalDual.hpp
+	CoinWarmStartPrimalDual.hpp \
+	cgraph.h clique_extender.h
 
 #######################################################################
 # Create the Config.h file that has all public defines and install it #
