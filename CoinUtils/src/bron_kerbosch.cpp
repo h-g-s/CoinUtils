@@ -312,6 +312,16 @@ void bron_kerbosch_algorithm(BronKerbosch *bk, const ArrayOfVertices *C, ListOfV
     }
 }
 
+struct CompareMdegree {
+    CompareMdegree(const BronKerbosch *bk) { this->bk = bk; }
+    bool operator () (const int &i, const int &j) {
+        if(bk->vertices[i].mdegree != bk->vertices[j].mdegree)
+            return bk->vertices[i].mdegree >= bk->vertices[j].mdegree;
+        return bk->vertices[i].degree > bk->vertices[j].degree;
+    }
+    const BronKerbosch *bk;
+};
+
 int bk_run(BronKerbosch *bk) {
     ArrayOfVertices *C = array_of_vertices_create(bk->nVertices/INT_SIZE + 1);
     ArrayOfVertices *S = array_of_vertices_create(bk->nVertices/INT_SIZE + 1);
@@ -322,13 +332,7 @@ int bk_run(BronKerbosch *bk) {
         P->totalWeight += bk->vertices[i].weight;
     }
 
-    P->vertices.sort(
-            [bk](const int &a, const int &b) -> bool {
-                if(bk->vertices[a].mdegree != bk->vertices[b].mdegree)
-                    return bk->vertices[a].mdegree > bk->vertices[b].mdegree;
-                return bk->vertices[a].degree > bk->vertices[b].degree;
-            }
-    );
+    P->vertices.sort(CompareMdegree(bk));
 
     bron_kerbosch_algorithm(bk, C, P, S);
 

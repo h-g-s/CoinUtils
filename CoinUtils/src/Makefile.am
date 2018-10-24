@@ -113,7 +113,7 @@ libCoinUtils_la_LDFLAGS = $(LT_LDFLAGS)
 
 # Here list all include flags, relative to this "srcdir" directory.  This
 # "cygpath" stuff is necessary to compile with native compilers on Windows
-AM_CPPFLAGS = $(GLPK_CFLAGS) -DCOIN_CGRAPH
+AM_CPPFLAGS = $(GLPK_CFLAGS)
 
 # This line is necessary to allow VPATH compilation
 DEFAULT_INCLUDES = -I. -I`$(CYGPATH_W) $(srcdir)`
@@ -184,7 +184,16 @@ includecoin_HEADERS = \
 	CoinWarmStartBasis.hpp \
 	CoinWarmStartVector.hpp \
 	CoinWarmStartDual.hpp \
-	CoinWarmStartPrimalDual.hpp
+	CoinWarmStartPrimalDual.hpp \
+	bron_kerbosch.h bron_kerbosch.cpp \
+	build_cgraph.h build_cgraph.cpp \
+	cgraph.h cgraph.cpp \
+	clique.h clique.cpp \
+	clique_extender.h clique_extender.cpp \
+	clique_separation.h clique_separation.cpp \
+	cut.h cut.cpp \
+	str_utils.h str_utils.cpp \
+	vint_set.h vint_set.cpp 
 
 #######################################################################
 # Create the Config.h file that has all public defines and install it #

@@ -320,116 +320,7 @@ void mixedCliqueDetection(CGraph *cgraph, const std::vector<std::pair<int, doubl
     }
 }
 
-#ifdef COIN_CGRAPH
-CGraph *build_cgraph(const CoinPackedMatrix *matrixByRow, const int numCols, const char *colType,
-                     const double *rhs, const char *sense) {
-    int cgraphSize = numCols * 2;
-    CGraph *cgraph = cgraph_create(cgraphSize);
-    int idxRow;
-    char recomputeDegree = 0;
-    std::vector<std::vector<int> > cvec(cgraphSize);
-
-    for (int i = 0; i < numCols; i++) {
-        cvec[i].reserve(128);
-        /* inserting trivial conflicts: variable-complement */
-        if (colType[i] == 1) { //consider only binary variables
-            cvec[i].push_back(i + numCols);
-            cvec[i + numCols].push_back(i);
-        }
-    }
-
-    const int* idxs = matrixByRow->getIndices();
-    const double *coefs = matrixByRow->getElements();
-    const int *start = matrixByRow->getVectorStarts();
-    const int *length = matrixByRow->getVectorLengths();
-
-    for(idxRow = 0; idxRow < matrixByRow->getNumRows(); idxRow++) {
-        const int nElements = length[idxRow];
-        const int rowStart = start[idxRow];
-        std::vector<std::pair<int, double> > columns(nElements);
-        bool onlyBinaryVars = true;
-        int nPos = 0; //number of positive coefficients
-        double sumNegCoefs = 0.0; //sum of all negative coefficients
-        double minCoef = (std::numeric_limits<double>::max() / 10.0);
-        double maxCoef = -(std::numeric_limits<double>::max() / 10.0);
-
-        if ((nElements < 2) || (fabs(rhs[idxRow]) >= LARGE_CONST))
-            continue;
-
-        if (sense[idxRow] == 'R') {
-            //TODO: CHECK CONFLICTS IN RANGED CONSTRAINTS
-            continue;
-        }
-
-        double mult = (sense[idxRow] == 'G') ? -1.0 : 1.0;
-        for (int i = 0; i < nElements; i++) {
-            columns[i].first = idxs[i+rowStart];
-            columns[i].second = coefs[i+rowStart] * mult;
-
-            if(colType[columns[i].first] != 1) {
-                onlyBinaryVars = false;
-                break;
-            }
-
-            if(columns[i].second <= -EPS) {
-                sumNegCoefs += columns[i].second;
-            } else {
-                nPos++;
-            }
-
-            minCoef = std::min(minCoef, columns[i].second);
-            maxCoef = std::max(maxCoef, columns[i].second);
-        }
-
-        if (!onlyBinaryVars) {
-            continue;
-        }
-
-        /* special case: GUB constraints */
-        if ( DBL_EQUAL( minCoef, maxCoef ) &&  DBL_EQUAL( maxCoef, rhs[idxRow] * mult ) &&
-             DBL_EQUAL(minCoef, 1.0) && ((sense[idxRow]=='E') || (sense[idxRow]=='L'))
-             && (nElements > 3) ) {
-            processClique(cgraph, idxs + rowStart, nElements, &recomputeDegree);
-        } else {
-            std::sort(columns.begin(), columns.end(), sort_columns);
-            cliqueDetection(cgraph, columns, sumNegCoefs, rhs[idxRow] * mult, &recomputeDegree);
-            cliqueComplementDetection(cgraph, columns, sumNegCoefs, rhs[idxRow] * mult, &recomputeDegree);
-            mixedCliqueDetection(cgraph, columns, sumNegCoefs, rhs[idxRow] * mult, cvec);
-
-            /*equality constraints are converted into two inequality constraints (<=).
-            the first one is analyzed above and the second (multiplying the constraint by -1) is analyzed below.
-            Example: x + y + z = 2 ==>  (x + y + z <= 2) and (- x - y - z <= -2)*/
-            if (sense[idxRow] == 'E') {
-                std::vector<std::pair<int, double> > newColumns(nElements);
-                sumNegCoefs = 0.0;
-                for (int i = 0; i < nElements; i++) {
-                    newColumns[i].first = columns[nElements - i - 1].first;
-                    newColumns[i].second = -1.0 * columns[nElements - i - 1].second;
-                    if (newColumns[i].second <= -EPS)
-                        sumNegCoefs += newColumns[i].second;
-                }
-
-                cliqueDetection(cgraph, newColumns, sumNegCoefs, -1.0 * rhs[idxRow], &recomputeDegree);
-                cliqueComplementDetection(cgraph, newColumns, sumNegCoefs, -1.0 * rhs[idxRow], &recomputeDegree);
-                mixedCliqueDetection(cgraph, newColumns, sumNegCoefs, -1.0 * rhs[idxRow], cvec);
-            }
-        }
-    }
-
-    for (int i = 0; i < (int) cvec.size(); i++) {
-        if (!cvec[i].empty()) {
-            cgraph_add_node_conflicts_no_sim(cgraph, i, &cvec[i][0], (int) cvec[i].size());
-        }
-    }
-
-    if (recomputeDegree)
-        cgraph_recompute_degree(cgraph);
-    else
-        cgraph_update_min_max_degree(cgraph);
-
-    return cgraph;
-}
-#else
+#ifdef CGRAPH_LP
 CGraph *build_cgraph(const LinearProgram *mip) {
     if (lp_num_binary_cols(mip) < 2)
         return nullptr;
@@ -535,6 +426,115 @@ CGraph *build_cgraph(const LinearProgram *mip) {
 
     delete[] idxs;
     delete[] coefs;
+
+    return cgraph;
+}
+#else
+CGraph *build_cgraph(const CoinPackedMatrix *matrixByRow, const int numCols, const char *colType,
+                     const double *rhs, const char *sense) {
+    int cgraphSize = numCols * 2;
+    CGraph *cgraph = cgraph_create(cgraphSize);
+    int idxRow;
+    char recomputeDegree = 0;
+    std::vector<std::vector<int> > cvec(cgraphSize);
+
+    for (int i = 0; i < numCols; i++) {
+        cvec[i].reserve(128);
+        /* inserting trivial conflicts: variable-complement */
+        if (colType[i] == 1) { //consider only binary variables
+            cvec[i].push_back(i + numCols);
+            cvec[i + numCols].push_back(i);
+        }
+    }
+
+    const int* idxs = matrixByRow->getIndices();
+    const double *coefs = matrixByRow->getElements();
+    const int *start = matrixByRow->getVectorStarts();
+    const int *length = matrixByRow->getVectorLengths();
+
+    for(idxRow = 0; idxRow < matrixByRow->getNumRows(); idxRow++) {
+        const int nElements = length[idxRow];
+        const int rowStart = start[idxRow];
+        std::vector<std::pair<int, double> > columns(nElements);
+        bool onlyBinaryVars = true;
+        int nPos = 0; //number of positive coefficients
+        double sumNegCoefs = 0.0; //sum of all negative coefficients
+        double minCoef = (std::numeric_limits<double>::max() / 10.0);
+        double maxCoef = -(std::numeric_limits<double>::max() / 10.0);
+
+        if ((nElements < 2) || (fabs(rhs[idxRow]) >= LARGE_CONST))
+            continue;
+
+        if (sense[idxRow] == 'R') {
+            //TODO: CHECK CONFLICTS IN RANGED CONSTRAINTS
+            continue;
+        }
+
+        double mult = (sense[idxRow] == 'G') ? -1.0 : 1.0;
+        for (int i = 0; i < nElements; i++) {
+            columns[i].first = idxs[i+rowStart];
+            columns[i].second = coefs[i+rowStart] * mult;
+
+            if(colType[columns[i].first] != 1) {
+                onlyBinaryVars = false;
+                break;
+            }
+
+            if(columns[i].second <= -EPS) {
+                sumNegCoefs += columns[i].second;
+            } else {
+                nPos++;
+            }
+
+            minCoef = std::min(minCoef, columns[i].second);
+            maxCoef = std::max(maxCoef, columns[i].second);
+        }
+
+        if (!onlyBinaryVars) {
+            continue;
+        }
+
+        /* special case: GUB constraints */
+        if ( DBL_EQUAL( minCoef, maxCoef ) &&  DBL_EQUAL( maxCoef, rhs[idxRow] * mult ) &&
+             DBL_EQUAL(minCoef, 1.0) && ((sense[idxRow]=='E') || (sense[idxRow]=='L'))
+             && (nElements > 3) ) {
+            processClique(cgraph, idxs + rowStart, nElements, &recomputeDegree);
+        } else {
+            std::sort(columns.begin(), columns.end(), sort_columns);
+            cliqueDetection(cgraph, columns, sumNegCoefs, rhs[idxRow] * mult, &recomputeDegree);
+            cliqueComplementDetection(cgraph, columns, sumNegCoefs, rhs[idxRow] * mult, &recomputeDegree);
+            mixedCliqueDetection(cgraph, columns, sumNegCoefs, rhs[idxRow] * mult, cvec);
+
+            /*equality constraints are converted into two inequality constraints (<=).
+            the first one is analyzed above and the second (multiplying the constraint by -1) is analyzed below.
+            Example: x + y + z = 2 ==>  (x + y + z <= 2) and (- x - y - z <= -2)*/
+            if (sense[idxRow] == 'E') {
+                std::vector<std::pair<int, double> > newColumns(nElements);
+                sumNegCoefs = 0.0;
+                for (int i = 0; i < nElements; i++) {
+                    newColumns[i].first = columns[nElements - i - 1].first;
+                    newColumns[i].second = -1.0 * columns[nElements - i - 1].second;
+                    if (newColumns[i].second <= -EPS)
+                        sumNegCoefs += newColumns[i].second;
+                }
+
+                cliqueDetection(cgraph, newColumns, sumNegCoefs, -1.0 * rhs[idxRow], &recomputeDegree);
+                cliqueComplementDetection(cgraph, newColumns, sumNegCoefs, -1.0 * rhs[idxRow], &recomputeDegree);
+                mixedCliqueDetection(cgraph, newColumns, sumNegCoefs, -1.0 * rhs[idxRow], cvec);
+            }
+        }
+    }
+
+    for (int i = 0; i < (int) cvec.size(); i++) {
+        if (!cvec[i].empty()) {
+            cgraph_add_node_conflicts_no_sim(cgraph, i, &cvec[i][0], (int) cvec[i].size());
+        }
+    }
+
+    if (recomputeDegree)
+        cgraph_recompute_degree(cgraph);
+    else
+        cgraph_update_min_max_degree(cgraph);
 
     return cgraph;
 }
