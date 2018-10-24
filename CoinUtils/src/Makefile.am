@@ -193,7 +193,7 @@ includecoin_HEADERS = \
 	clique_separation.h clique_separation.cpp \
 	cut.h cut.cpp \
 	str_utils.h str_utils.cpp \
-	vint_set.h vint_set.cpp 
+	vint_set.h vint_set.cpp
 
 #######################################################################
 # Create the Config.h file that has all public defines and install it #

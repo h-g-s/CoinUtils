@@ -521,7 +521,7 @@ includecoin_HEADERS = \
 	clique_separation.h clique_separation.cpp \
 	cut.h cut.cpp \
 	str_utils.h str_utils.cpp \
-	vint_set.h vint_set.cpp 
+	vint_set.h vint_set.cpp
 
 all: config.h config_coinutils.h
 	$(MAKE) $(AM_MAKEFLAGS) all-am
