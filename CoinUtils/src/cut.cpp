@@ -401,29 +401,21 @@ void cut_pool_update(CutPool *cutpool) {
 #ifdef DEBUG
     assert(nRemoved >= 0 && nRemoved < cutpool->cuts.size());
 #endif
-    size_t last = 1;
-    for (size_t i = 0; i < cutpool->cuts.size(); i++) {
-        if (!removed[i])
-            continue;
 
-        last = std::max(last, i + 1);
-
-        while (last < cutpool->cuts.size()) {
-            if (!removed[last])
-                break;
-            last++;
+    if(nRemoved > 0) {
+        size_t last = 0;
+        for (size_t i = 0; i < cutpool->cuts.size(); i++) {
+            if (!removed[i]) {
+                cutpool->cuts[last++] = cutpool->cuts[i];
+            }
         }
-
-        if (last >= cutpool->cuts.size())
-            break;
-
-        cutpool->cuts[i] = cutpool->cuts[last];
-        removed[last] = 1;
-        last++;
+#ifdef DEBUG
+        assert(last == (cutpool->cuts.size()-nRemoved));
+#endif
+        cutpool->cuts.resize(last);
+        cutpool->cutFrequency.resize(last);
     }
 
-    cutpool->cuts.resize(cutpool->cuts.size() - nRemoved);
-    cutpool->cutFrequency.resize(cutpool->cutFrequency.size() - nRemoved);
     delete[] removed;
 }
 

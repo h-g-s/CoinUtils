@@ -100,6 +100,7 @@ libCoinUtils_la_SOURCES = \
 	clique_extender.h clique_extender.cpp \
 	clique_separation.h clique_separation.cpp \
 	cut.h cut.cpp \
+	node_heap.h node_heap.cpp \
 	str_utils.h str_utils.cpp \
 	vint_set.h vint_set.cpp 
 
@@ -192,6 +193,7 @@ includecoin_HEADERS = \
 	clique_extender.h clique_extender.cpp \
 	clique_separation.h clique_separation.cpp \
 	cut.h cut.cpp \
+	node_heap.h node_heap.cpp \
 	str_utils.h str_utils.cpp \
 	vint_set.h vint_set.cpp
 

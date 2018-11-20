@@ -1009,8 +1009,9 @@ int cgraph_get_best_n_neighbors(const CGraph *cgraph, int node, const double *co
         std::partial_sort(candidates.begin(), candidates.begin() + maxSize, candidates.end(), compare_node_costs);
     }
 
-    for(int i = 0; i < nNeighs; i++)
+    for(int i = 0; i < nNeighs; i++) {
         neighs[i] = candidates[i].node;
+    }
 
     return nNeighs;
 }
