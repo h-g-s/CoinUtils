@@ -15,12 +15,12 @@
 
 #if defined(_MSC_VER)
 // Turn off compiler warning about long names
-#  pragma warning(disable:4786)
-// Turn off compiler warning: 
+#pragma warning(disable : 4786)
+// Turn off compiler warning:
 // "empty controlled statement found; is this the intent?"
-#  pragma warning(disable:4390)
+#pragma warning(disable : 4390)
 // Turn off compiler warning about deprecated functions
-#  pragma warning(disable:4996)
+#pragma warning(disable : 4996)
 #endif
 
 #endif

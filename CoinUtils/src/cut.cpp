@@ -11,122 +11,125 @@
 #define EPS 1e-6
 
 struct _IdxCoef {
-    int idx;
-    double coef;
+  int idx;
+  double coef;
 };
 
 typedef struct _IdxCoef IdxCoef;
 
-bool compare_idx_coef(const IdxCoef &a, const IdxCoef &b) {
+bool compare_idx_coef(const IdxCoef &a, const IdxCoef &b)
+{
 #ifdef DEBUG
-    assert(a.idx != b.idx);
+  assert(a.idx != b.idx);
 #endif
-    return a.idx < b.idx;
+  return a.idx < b.idx;
 }
 
 struct _Cut {
-    int n, numActiveCols;
-    double rhs, violation;
-    int *idx;
-    double *coef;
-    double fitness;
+  int n, numActiveCols;
+  double rhs, violation;
+  int *idx;
+  double *coef;
+  double fitness;
 };
 
 struct _CutPool {
-    std::vector<Cut*> cuts;
-    int numCols;
-    int *bestCutByCol;
-    std::vector<int> cutFrequency;
+  std::vector< Cut * > cuts;
+  int numCols;
+  int *bestCutByCol;
+  std::vector< int > cutFrequency;
 };
 
-Cut *cut_create(const int *idxs, const double *coefs, int nz, double rhs, const double *x) {
-    Cut *cut = new Cut;
-    IdxCoef *ordered = new IdxCoef[nz];
-    double lhs = 0.0;
-    double minCoef = (std::numeric_limits<double>::max()/10.0),
-            maxCoef = -(std::numeric_limits<double>::max()/10.0);
+Cut *cut_create(const int *idxs, const double *coefs, int nz, double rhs, const double *x)
+{
+  Cut *cut = new Cut;
+  IdxCoef *ordered = new IdxCoef[nz];
+  double lhs = 0.0;
+  double minCoef = (std::numeric_limits< double >::max() / 10.0),
+         maxCoef = -(std::numeric_limits< double >::max() / 10.0);
 
-    cut->idx = new int[nz];
-    cut->coef = new double[nz];
-    cut->n = nz;
-    cut->rhs = rhs;
-    cut->numActiveCols = 0;
+  cut->idx = new int[nz];
+  cut->coef = new double[nz];
+  cut->n = nz;
+  cut->rhs = rhs;
+  cut->numActiveCols = 0;
 
-    if(std::is_sorted(idxs, idxs + nz)) {
-        for (int i = 0; i < nz; i++) {
-            cut->idx[i] = idxs[i];
-            cut->coef[i] = coefs[i];
+  if (std::is_sorted(idxs, idxs + nz)) {
+    for (int i = 0; i < nz; i++) {
+      cut->idx[i] = idxs[i];
+      cut->coef[i] = coefs[i];
 #ifdef DEBUG
-            assert(fabs(coefs[i]) > EPS);
+      assert(fabs(coefs[i]) > EPS);
 #endif
-            if (fabs(x[idxs[i]]) > EPS) {
-                lhs += (coefs[i] * x[idxs[i]]);
-                cut->numActiveCols++;
-                minCoef = std::min(minCoef, coefs[i]);
-                maxCoef = std::max(maxCoef, coefs[i]);
-            }
-        }
-    } else {
-        for (int i = 0; i < nz; i++) {
-            ordered[i].idx = idxs[i];
-            ordered[i].coef = coefs[i];
-#ifdef DEBUG
-            assert(fabs(coefs[i]) > EPS);
-#endif
-            if (fabs(x[idxs[i]]) > EPS) {
-                lhs += (coefs[i] * x[idxs[i]]);
-                cut->numActiveCols++;
-                minCoef = std::min(minCoef, coefs[i]);
-                maxCoef = std::max(maxCoef, coefs[i]);
-            }
-        }
-        std::sort(ordered, ordered + nz, compare_idx_coef);
-        for (int i = 0; i < nz; i++) {
-            cut->idx[i] = ordered[i].idx;
-            cut->coef[i] = ordered[i].coef;
-        }
+      if (fabs(x[idxs[i]]) > EPS) {
+        lhs += (coefs[i] * x[idxs[i]]);
+        cut->numActiveCols++;
+        minCoef = std::min(minCoef, coefs[i]);
+        maxCoef = std::max(maxCoef, coefs[i]);
+      }
     }
+  } else {
+    for (int i = 0; i < nz; i++) {
+      ordered[i].idx = idxs[i];
+      ordered[i].coef = coefs[i];
+#ifdef DEBUG
+      assert(fabs(coefs[i]) > EPS);
+#endif
+      if (fabs(x[idxs[i]]) > EPS) {
+        lhs += (coefs[i] * x[idxs[i]]);
+        cut->numActiveCols++;
+        minCoef = std::min(minCoef, coefs[i]);
+        maxCoef = std::max(maxCoef, coefs[i]);
+      }
+    }
+    std::sort(ordered, ordered + nz, compare_idx_coef);
+    for (int i = 0; i < nz; i++) {
+      cut->idx[i] = ordered[i].idx;
+      cut->coef[i] = ordered[i].coef;
+    }
+  }
 
-    const double diffOfCoefs = fabs(maxCoef - minCoef) + fabs(maxCoef - rhs) + fabs(minCoef - rhs);
-    cut->violation = lhs - rhs;
+  const double diffOfCoefs = fabs(maxCoef - minCoef) + fabs(maxCoef - rhs) + fabs(minCoef - rhs);
+  cut->violation = lhs - rhs;
 
 #ifdef DEBUG
-    assert(cut->violation > EPS);
-    assert(cut->numActiveCols > 0);
+  assert(cut->violation > EPS);
+  assert(cut->numActiveCols > 0);
 #endif
 
-    cut->fitness = ((cut->violation / ((double) cut->numActiveCols)) * 100000.0) +
-                   ((1.0 / (diffOfCoefs + 1.0)) * 100.0);
+  cut->fitness = ((cut->violation / ((double)cut->numActiveCols)) * 100000.0) + ((1.0 / (diffOfCoefs + 1.0)) * 100.0);
 
-    delete[] ordered;
+  delete[] ordered;
 
-    return cut;
+  return cut;
 }
 
-Cut *cut_clone(const Cut *rhs) {
-    if (!rhs)
-        return nullptr;
+Cut *cut_clone(const Cut *rhs)
+{
+  if (!rhs)
+    return nullptr;
 
-    Cut *cut = new Cut;
-    cut->n = rhs->n;
-    cut->rhs = rhs->rhs;
-    cut->numActiveCols = rhs->numActiveCols;
-    cut->violation = rhs->violation;
-    cut->fitness = rhs->fitness;
-    cut->idx = new int[cut->n];
-    cut->coef = new double[cut->n];
-    std::copy(rhs->idx, rhs->idx + rhs->n, cut->idx);
-    std::copy(rhs->coef, rhs->coef + rhs->n, cut->coef);
+  Cut *cut = new Cut;
+  cut->n = rhs->n;
+  cut->rhs = rhs->rhs;
+  cut->numActiveCols = rhs->numActiveCols;
+  cut->violation = rhs->violation;
+  cut->fitness = rhs->fitness;
+  cut->idx = new int[cut->n];
+  cut->coef = new double[cut->n];
+  std::copy(rhs->idx, rhs->idx + rhs->n, cut->idx);
+  std::copy(rhs->coef, rhs->coef + rhs->n, cut->coef);
 
-    return cut;
+  return cut;
 }
 
-void cut_free(Cut **_cut) {
-    Cut *cut = *_cut;
-    delete[] cut->idx;
-    delete[] cut->coef;
-    delete cut;
-    *_cut = nullptr;
+void cut_free(Cut **_cut)
+{
+  Cut *cut = *_cut;
+  delete[] cut->idx;
+  delete[] cut->coef;
+  delete cut;
+  *_cut = nullptr;
 }
 
 int cut_size(const Cut *cut) { return cut->n; }
@@ -143,298 +146,315 @@ int cut_get_num_active_cols(const Cut *cut) { return cut->numActiveCols; }
 
 double cut_get_fitness(const Cut *cut) { return cut->fitness; }
 
-int bin_search(const int *v, const int n, const int x) {
-    register int mid, left = 0, right = n - 1;
+int bin_search(const int *v, const int n, const int x)
+{
+  register int mid, left = 0, right = n - 1;
 
-    while (left <= right) {
-        mid = (left + right) / 2;
+  while (left <= right) {
+    mid = (left + right) / 2;
 
-        if (v[mid] == x) return mid;
-        else if (v[mid] < x) left = mid + 1;
-        else right = mid - 1;
-    }
-    return -1;
+    if (v[mid] == x)
+      return mid;
+    else if (v[mid] < x)
+      left = mid + 1;
+    else
+      right = mid - 1;
+  }
+  return -1;
 }
 
-int cut_check_domination(const Cut *cutA, const Cut *cutB) {
-    if (cutA->violation < cutB->violation - EPS)
+int cut_check_domination(const Cut *cutA, const Cut *cutB)
+{
+  if (cutA->violation < cutB->violation - EPS)
+    return 0;
+
+  /* rhsA == 0 && rhsB < 0 */
+  if (fabsl(cutA->rhs) <= EPS && cutB->rhs < -EPS)
+    return 0;
+
+  /* rhsA > 0 && rhsB == 0 */
+  if (cutA->rhs > EPS && fabsl(cutB->rhs) <= EPS)
+    return 0;
+
+  int sizeA = cutA->n, sizeB = cutB->n;
+  const int *idxsA = cutA->idx, *idxsB = cutB->idx;
+  const double *coefsA = cutA->coef, *coefsB = cutB->coef;
+  double normConstA, normConstB;
+  char *analyzed = new char[sizeB]();
+
+  if (fabsl(cutA->rhs) <= EPS || fabsl(cutB->rhs) <= EPS)
+    normConstA = normConstB = 1.0;
+  else {
+    normConstA = cutA->rhs;
+    normConstB = cutB->rhs;
+  }
+
+  for (int i = 0; i < sizeA; i++) {
+    int idxA = idxsA[i];
+    double normCoefA = (coefsA[i] / normConstA) * 1000.0;
+    int posB = bin_search(idxsB, sizeB, idxA);
+
+    if (posB == -1 && normCoefA < -EPS) {
+      delete[] analyzed;
+      return 0;
+    } else if (posB != -1) {
+      double normCoefB = (coefsB[posB] / normConstB) * 1000.0;
+      analyzed[posB] = 1;
+      if (normCoefA < normCoefB - EPS) {
+        delete[] analyzed;
         return 0;
-
-    /* rhsA == 0 && rhsB < 0 */
-    if (fabsl(cutA->rhs) <= EPS && cutB->rhs < -EPS)
-        return 0;
-
-    /* rhsA > 0 && rhsB == 0 */
-    if (cutA->rhs > EPS && fabsl(cutB->rhs) <= EPS)
-        return 0;
-
-    int sizeA = cutA->n, sizeB = cutB->n;
-    const int *idxsA = cutA->idx, *idxsB = cutB->idx;
-    const double *coefsA = cutA->coef, *coefsB = cutB->coef;
-    double normConstA, normConstB;
-    char *analyzed = new char[sizeB]();
-
-    if (fabsl(cutA->rhs) <= EPS || fabsl(cutB->rhs) <= EPS)
-        normConstA = normConstB = 1.0;
-    else {
-        normConstA = cutA->rhs;
-        normConstB = cutB->rhs;
+      }
     }
+  }
 
-    for (int i = 0; i < sizeA; i++) {
-        int idxA = idxsA[i];
-        double normCoefA = (coefsA[i] / normConstA) * 1000.0;
-        int posB = bin_search(idxsB, sizeB, idxA);
+  for (int i = 0; i < sizeB; i++) {
+    if (analyzed[i])
+      continue;
 
-        if (posB == -1 && normCoefA < -EPS) {
-            delete[] analyzed;
-            return 0;
-        }
-        else if (posB != -1) {
-            double normCoefB = (coefsB[posB] / normConstB) * 1000.0;
-            analyzed[posB] = 1;
-            if (normCoefA < normCoefB - EPS) {
-                delete[] analyzed;
-                return 0;
-            }
-        }
+    int idxB = idxsB[i];
+    double normCoefB = (coefsB[i] / normConstB) * 1000.0;
+    int posA = bin_search(idxsA, sizeA, idxB);
+
+    if (posA == -1 && normCoefB > EPS) {
+      delete[] analyzed;
+      return 0;
     }
+  }
 
-    for (int i = 0; i < sizeB; i++) {
-        if (analyzed[i]) continue;
+  delete[] analyzed;
 
-        int idxB = idxsB[i];
-        double normCoefB = (coefsB[i] / normConstB) * 1000.0;
-        int posA = bin_search(idxsA, sizeA, idxB);
+  return 1;
+}
 
-        if (posA == -1 && normCoefB > EPS) {
-            delete[] analyzed;
-            return 0;
-        }
-    }
+int cut_is_equal(const Cut *cutA, const Cut *cutB)
+{
+  if (fabsl(cutA->violation - cutB->violation) > EPS || cutA->n != cutB->n)
+    return 0;
 
-    delete[] analyzed;
+  /* rhsA == 0 && rhsB != 0 */
+  if (fabsl(cutA->rhs) <= EPS && fabsl(cutB->rhs) > EPS)
+    return 0;
 
+  /* rhsA != 0 && rhsB == 0 */
+  if (fabsl(cutA->rhs) > EPS && fabsl(cutB->rhs) <= EPS)
+    return 0;
+
+  const int *idxsA = cutA->idx, *idxsB = cutB->idx;
+  const double *coefsA = cutA->coef, *coefsB = cutB->coef;
+  double normConstA, normConstB;
+
+  if (fabsl(cutA->rhs) <= EPS && fabsl(cutB->rhs) <= EPS)
+    normConstA = normConstB = 1.0;
+  else {
+    normConstA = cutA->rhs;
+    normConstB = cutB->rhs;
+  }
+
+  int i;
+  for (i = 0; i < cutA->n; i++) {
+    int idxA = idxsA[i], idxB = idxsB[i];
+    double normCoefA = (coefsA[i] / normConstA) * 1000.0,
+           normCoefB = (coefsB[i] / normConstB) * 1000.0;
+
+    if (idxA != idxB)
+      return 0;
+    if (fabsl(normCoefA - normCoefB) > EPS)
+      return 0;
+  }
+  return 1;
+}
+
+int cut_domination(const Cut *cutA, const Cut *cutB)
+{
+  /* checks if cutA and cutB are equivalent */
+  if (cut_is_equal(cutA, cutB))
+    return 0;
+
+  /* checks if cutA dominates cutB */
+  if (cut_check_domination(cutA, cutB))
     return 1;
+
+  /* checks if cutB dominates cutA */
+  if (cut_check_domination(cutB, cutA))
+    return 2;
+
+  /* cutA and cutB are not dominated */
+  return 3;
 }
 
-int cut_is_equal(const Cut *cutA, const Cut *cutB) {
-    if (fabsl(cutA->violation - cutB->violation) > EPS || cutA->n != cutB->n)
-        return 0;
+CutPool *cut_pool_create(const int numCols)
+{
+  CutPool *cutpool = new CutPool;
 
-    /* rhsA == 0 && rhsB != 0 */
-    if (fabsl(cutA->rhs) <= EPS && fabsl(cutB->rhs) > EPS)
-        return 0;
+  cutpool->numCols = numCols;
+  cutpool->cuts.reserve(CUTPOOL_CAPACITY);
+  cutpool->cutFrequency.reserve(CUTPOOL_CAPACITY);
+  cutpool->bestCutByCol = new int[cutpool->numCols];
+  std::fill(cutpool->bestCutByCol, cutpool->bestCutByCol + cutpool->numCols, -1);
 
-    /* rhsA != 0 && rhsB == 0 */
-    if (fabsl(cutA->rhs) > EPS && fabsl(cutB->rhs) <= EPS)
-        return 0;
+  return cutpool;
+}
 
-    const int *idxsA = cutA->idx, *idxsB = cutB->idx;
-    const double *coefsA = cutA->coef, *coefsB = cutB->coef;
-    double normConstA, normConstB;
+void cut_pool_free(CutPool **_cutpool)
+{
+  CutPool *cutpool = *_cutpool;
 
-    if (fabsl(cutA->rhs) <= EPS && fabsl(cutB->rhs) <= EPS)
-        normConstA = normConstB = 1.0;
-    else {
-        normConstA = cutA->rhs;
-        normConstB = cutB->rhs;
+  for (auto &cut : cutpool->cuts)
+    cut_free(&cut);
+
+  delete[] cutpool->bestCutByCol;
+  delete cutpool;
+  *_cutpool = nullptr;
+}
+
+void update_best_cut_by_col(CutPool *cutpool, const int idxCut)
+{
+#ifdef DEBUG
+  assert(idxCut >= 0 && idxCut < cutpool->cuts.size());
+#endif
+  const Cut *cut = cutpool->cuts[idxCut];
+  const int nz = cut->n;
+  const int *idxs = cut->idx;
+  const double fitness = cut->fitness;
+
+  for (int i = 0; i < nz; i++) {
+    const int idx = idxs[i];
+
+#ifdef DEBUG
+    assert(idx >= 0 && idx < cutpool->numCols);
+#endif
+
+    if (cutpool->bestCutByCol[idx] == -1) {
+      cutpool->bestCutByCol[idx] = idxCut;
+      cutpool->cutFrequency[idxCut]++;
+    } else {
+      const int currBestCut = cutpool->bestCutByCol[idx];
+      const double currFitness = cutpool->cuts[currBestCut]->fitness;
+
+      if (fitness > currFitness + EPS) {
+        cutpool->cutFrequency[idxCut]++;
+        cutpool->cutFrequency[currBestCut]--;
+        cutpool->bestCutByCol[idx] = idxCut;
+#ifdef DEBUG
+        assert(cutpool->cutFrequency[currBestCut] >= 0);
+#endif
+      }
     }
+  }
+}
 
-    int i;
-    for (i = 0; i < cutA->n; i++) {
-        int idxA = idxsA[i], idxB = idxsB[i];
-        double normCoefA = (coefsA[i] / normConstA) * 1000.0,
-                normCoefB = (coefsB[i] / normConstB) * 1000.0;
+int cut_pool_insert(CutPool *cutpool, const Cut *newCut)
+{
+  const int position = (int)cutpool->cuts.size();
+  cutpool->cuts.push_back(cut_clone(newCut));
+  cutpool->cutFrequency.push_back(0);
+  update_best_cut_by_col(cutpool, position);
 
-        if (idxA != idxB) return 0;
-        if (fabsl(normCoefA - normCoefB) > EPS) return 0;
+#ifdef DEBUG
+  assert(cutpool->cuts.size() == cutpool->cutFrequency.size());
+#endif
+
+  //if(cutpool->cuts.size() > INITIAL_CAPACITY && cutpool->cutFrequency[position] == 0) {
+  if (cutpool->cutFrequency[position] == 0) {
+    cut_free(&cutpool->cuts[position]);
+    cutpool->cuts.pop_back();
+    cutpool->cutFrequency.pop_back();
+    return 0;
+  }
+
+  return 1;
+}
+
+void cut_pool_update(CutPool *cutpool)
+{
+#ifdef DEBUG
+  assert(cutpool->cutFrequency.size() == cutpool->cuts.size());
+#endif
+
+  if (cutpool->cuts.size() < 2)
+    return;
+
+  char *removed = new char[cutpool->cuts.size()]();
+  int nRemoved = 0;
+
+  for (size_t i = 0; i < cutpool->cuts.size(); i++) {
+    //if(cutPool->cuts.size() > INITIAL_CAPACITY && cutPool->cutFrequency[i] == 0) {
+    if (cutpool->cutFrequency[i] == 0) {
+      removed[i] = 1;
+      nRemoved++;
+      cut_free(&cutpool->cuts[i]);
+      cutpool->cuts[i] = nullptr;
     }
-    return 1;
-}
+  }
 
-int cut_domination(const Cut *cutA, const Cut *cutB) {
-    /* checks if cutA and cutB are equivalent */
-    if (cut_is_equal(cutA, cutB))
-        return 0;
+  for (size_t i = 0; i < cutpool->cuts.size(); i++) {
+    if (removed[i])
+      continue;
 
-    /* checks if cutA dominates cutB */
-    if (cut_check_domination(cutA, cutB))
-        return 1;
+    const Cut *cutA = cutpool->cuts[i];
 
-    /* checks if cutB dominates cutA */
-    if (cut_check_domination(cutB, cutA))
-        return 2;
+    for (size_t j = i + 1; j < cutpool->cuts.size(); j++) {
+      if (removed[j])
+        continue;
 
-    /* cutA and cutB are not dominated */
-    return 3;
-}
+      const Cut *cutB = cutpool->cuts[j];
+      int chkDm = cut_domination(cutA, cutB);
 
-CutPool *cut_pool_create(const int numCols) {
-    CutPool *cutpool = new CutPool;
-
-    cutpool->numCols = numCols;
-    cutpool->cuts.reserve(CUTPOOL_CAPACITY);
-    cutpool->cutFrequency.reserve(CUTPOOL_CAPACITY);
-    cutpool->bestCutByCol = new int[cutpool->numCols];
-    std::fill(cutpool->bestCutByCol, cutpool->bestCutByCol + cutpool->numCols, -1);
-
-    return cutpool;
-}
-
-void cut_pool_free(CutPool **_cutpool) {
-    CutPool *cutpool = *_cutpool;
-
-    for (auto &cut : cutpool->cuts)
-        cut_free(&cut);
-
-    delete[] cutpool->bestCutByCol;
-    delete cutpool;
-    *_cutpool = nullptr;
-}
-
-void update_best_cut_by_col(CutPool *cutpool, const int idxCut) {
-#ifdef DEBUG
-    assert(idxCut >= 0 && idxCut < cutpool->cuts.size());
-#endif
-    const Cut *cut = cutpool->cuts[idxCut];
-    const int nz = cut->n;
-    const int *idxs = cut->idx;
-    const double fitness = cut->fitness;
-
-    for (int i = 0; i < nz; i++) {
-        const int idx = idxs[i];
-
-#ifdef DEBUG
-        assert(idx >= 0 && idx < cutpool->numCols);
-#endif
-
-        if (cutpool->bestCutByCol[idx] == -1) {
-            cutpool->bestCutByCol[idx] = idxCut;
-            cutpool->cutFrequency[idxCut]++;
-        } else {
-            const int currBestCut = cutpool->bestCutByCol[idx];
-            const double currFitness = cutpool->cuts[currBestCut]->fitness;
-
-            if (fitness > currFitness + EPS) {
-                cutpool->cutFrequency[idxCut]++;
-                cutpool->cutFrequency[currBestCut]--;
-                cutpool->bestCutByCol[idx] = idxCut;
-#ifdef DEBUG
-                assert(cutpool->cutFrequency[currBestCut] >= 0);
-#endif
-            }
-        }
+      if (chkDm == 0 || chkDm == 2) { //cutA is equivalent to cutB or cutB dominates cutA
+        removed[i] = 1;
+        nRemoved++;
+        cut_free(&cutpool->cuts[i]);
+        cutpool->cuts[i] = nullptr;
+        break;
+      } else if (chkDm == 1) { //cutA dominates cutB
+        removed[j] = 1;
+        nRemoved++;
+        cut_free(&cutpool->cuts[j]);
+        cutpool->cuts[j] = nullptr;
+        continue;
+      }
     }
-}
-
-int cut_pool_insert(CutPool *cutpool, const Cut *newCut) {
-    const int position = (int)cutpool->cuts.size();
-    cutpool->cuts.push_back(cut_clone(newCut));
-    cutpool->cutFrequency.push_back(0);
-    update_best_cut_by_col(cutpool, position);
-
+  }
 #ifdef DEBUG
-    assert(cutpool->cuts.size() == cutpool->cutFrequency.size());
+  assert(nRemoved >= 0 && nRemoved < cutpool->cuts.size());
 #endif
 
-    //if(cutpool->cuts.size() > INITIAL_CAPACITY && cutpool->cutFrequency[position] == 0) {
-    if (cutpool->cutFrequency[position] == 0) {
-        cut_free(&cutpool->cuts[position]);
-        cutpool->cuts.pop_back();
-        cutpool->cutFrequency.pop_back();
-        return 0;
-    }
-
-    return 1;
-}
-
-void cut_pool_update(CutPool *cutpool) {
-#ifdef DEBUG
-    assert(cutpool->cutFrequency.size() == cutpool->cuts.size());
-#endif
-
-    if (cutpool->cuts.size() < 2)
-        return;
-
-    char *removed = new char[cutpool->cuts.size()]();
-    int nRemoved = 0;
-
+  if (nRemoved > 0) {
+    size_t last = 0;
     for (size_t i = 0; i < cutpool->cuts.size(); i++) {
-        //if(cutPool->cuts.size() > INITIAL_CAPACITY && cutPool->cutFrequency[i] == 0) {
-        if (cutpool->cutFrequency[i] == 0) {
-            removed[i] = 1;
-            nRemoved++;
-            cut_free(&cutpool->cuts[i]);
-            cutpool->cuts[i] = nullptr;
-        }
-    }
-
-    for (size_t i = 0; i < cutpool->cuts.size(); i++) {
-        if (removed[i])
-            continue;
-
-        const Cut *cutA = cutpool->cuts[i];
-
-        for (size_t j = i + 1; j < cutpool->cuts.size(); j++) {
-            if (removed[j])
-                continue;
-
-            const Cut *cutB = cutpool->cuts[j];
-            int chkDm = cut_domination(cutA, cutB);
-
-            if (chkDm == 0 || chkDm == 2) { //cutA is equivalent to cutB or cutB dominates cutA
-                removed[i] = 1;
-                nRemoved++;
-                cut_free(&cutpool->cuts[i]);
-                cutpool->cuts[i] = nullptr;
-                break;
-            } else if (chkDm == 1) { //cutA dominates cutB
-                removed[j] = 1;
-                nRemoved++;
-                cut_free(&cutpool->cuts[j]);
-                cutpool->cuts[j] = nullptr;
-                continue;
-            }
-        }
+      if (!removed[i]) {
+        cutpool->cuts[last++] = cutpool->cuts[i];
+      }
     }
 #ifdef DEBUG
-    assert(nRemoved >= 0 && nRemoved < cutpool->cuts.size());
+    assert(last == (cutpool->cuts.size() - nRemoved));
 #endif
+    cutpool->cuts.resize(last);
+    cutpool->cutFrequency.resize(last);
+  }
 
-    if(nRemoved > 0) {
-        size_t last = 0;
-        for (size_t i = 0; i < cutpool->cuts.size(); i++) {
-            if (!removed[i]) {
-                cutpool->cuts[last++] = cutpool->cuts[i];
-            }
-        }
-#ifdef DEBUG
-        assert(last == (cutpool->cuts.size()-nRemoved));
-#endif
-        cutpool->cuts.resize(last);
-        cutpool->cutFrequency.resize(last);
-    }
-
-    delete[] removed;
+  delete[] removed;
 }
 
-int cut_pool_size(const CutPool *cutpool) {
-    if (!cutpool)
-        return 0;
-    return (int)cutpool->cuts.size();
+int cut_pool_size(const CutPool *cutpool)
+{
+  if (!cutpool)
+    return 0;
+  return (int)cutpool->cuts.size();
 }
 
-Cut *cut_pool_get_cut(const CutPool *cutpool, int idx) {
+Cut *cut_pool_get_cut(const CutPool *cutpool, int idx)
+{
 #ifdef DEBUG
-    assert(idx >= 0 && idx < cutpool->cuts.size());
+  assert(idx >= 0 && idx < cutpool->cuts.size());
 #endif
-    return cutpool->cuts[idx];
+  return cutpool->cuts[idx];
 }
 
-int cut_pool_cut_frequency(const CutPool *cutpool, int idx) {
+int cut_pool_cut_frequency(const CutPool *cutpool, int idx)
+{
 #ifdef DEBUG
-    assert(idx >= 0 && idx < cutpool->cuts.size());
+  assert(idx >= 0 && idx < cutpool->cuts.size());
 #endif
-    return cutpool->cutFrequency[idx];
+  return cutpool->cutFrequency[idx];
 }

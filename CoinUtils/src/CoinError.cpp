@@ -16,5 +16,7 @@ void WindowsErrorPopupBlocker()
   SetErrorMode(SEM_FAILCRITICALERRORS | SEM_NOGPFAULTERRORBOX);
 }
 #else
-void WindowsErrorPopupBlocker() {}
+void WindowsErrorPopupBlocker()
+{
+}
 #endif
