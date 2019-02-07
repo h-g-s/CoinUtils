@@ -42,43 +42,44 @@ const char *CoinFileIOBase::getFileName() const
 #include <stdio.h>
 
 // This reads plain text files
-class CoinPlainFileInput : public CoinFileInput {
-public:
-  CoinPlainFileInput(const std::string &fileName)
-    : CoinFileInput(fileName)
-    , f_(0)
-  {
-    readType_ = "plain";
-    if (fileName != "stdin") {
-      f_ = fopen(fileName.c_str(), "r");
-      if (f_ == 0)
-        throw CoinError("Could not open file for reading!",
-          "CoinPlainFileInput",
-          "CoinPlainFileInput");
-    } else {
-      f_ = stdin;
-    }
+CoinPlainFileInput::CoinPlainFileInput(const std::string &fileName)
+  : CoinFileInput(fileName)
+  , f_(0)
+{
+  readType_ = "plain";
+  if (fileName != "stdin") {
+    f_ = fopen(fileName.c_str(), "r");
+    if (f_ == 0)
+      throw CoinError("Could not open file for reading!",
+        "CoinPlainFileInput",
+        "CoinPlainFileInput");
+  } else {
+    f_ = stdin;
   }
+}
+/// When already opened
+CoinPlainFileInput::CoinPlainFileInput(FILE *fp)
+  : CoinFileInput("")
+  , f_(fp)
+{
+  readType_ = "plain";
+}
 
-  virtual ~CoinPlainFileInput()
-  {
-    if (f_ != 0)
-      fclose(f_);
-  }
+CoinPlainFileInput::~CoinPlainFileInput()
+{
+  if (f_ != 0)
+    fclose(f_);
+}
 
-  virtual int read(void *buffer, int size)
-  {
-    return static_cast< int >(fread(buffer, 1, size, f_));
-  }
+int CoinPlainFileInput::read(void *buffer, int size)
+{
+  return static_cast< int >(fread(buffer, 1, size, f_));
+}
 
-  virtual char *gets(char *buffer, int size)
-  {
-    return fgets(buffer, size, f_);
-  }
-
-private:
-  FILE *f_;
-};
+char *CoinPlainFileInput::gets(char *buffer, int size)
+{
+  return fgets(buffer, size, f_);
+}
 
 // ------ helper class supporting buffered gets -------
 
@@ -683,3 +684,6 @@ bool fileCoinReadable(std::string &fileName, const std::string &dfltPrefix)
     return true;
   }
 }
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/
