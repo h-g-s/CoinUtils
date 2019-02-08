@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinPresolveDual.cpp 2083 2019-01-06 19:38:09Z unxusr $ */
 // Copyright (C) 2002, International Business Machines
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
@@ -1719,3 +1719,6 @@ remove_dual_action::~remove_dual_action()
 {
   deleteAction(actions_, action *);
 }
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinParam.hpp 2083 2019-01-06 19:38:09Z unxusr $ */
 #ifndef CoinParam_H
 #define CoinParam_H
 
@@ -639,3 +639,6 @@ void printHelp(CoinParamVec &paramVec, int firstParam, int lastParam,
 }
 
 #endif /* CoinParam_H */
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

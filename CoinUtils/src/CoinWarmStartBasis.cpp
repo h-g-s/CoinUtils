@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinWarmStartBasis.cpp 2083 2019-01-06 19:38:09Z unxusr $ */
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
@@ -512,11 +512,12 @@ bool CoinWarmStartBasis::fixFullBasis()
   if (numberBasic > numArtificial_) {
     for (i = 0; i < numStructural_; i++) {
       Status status = getStructStatus(i);
-      if (status == CoinWarmStartBasis::basic)
+      if (status == CoinWarmStartBasis::basic) {
         setStructStatus(i, atLowerBound);
-      numberBasic--;
-      if (numberBasic == numArtificial_)
-        break;
+        numberBasic--;
+        if (numberBasic == numArtificial_)
+          break;
+      }
     }
   } else if (numberBasic < numArtificial_) {
     for (i = 0; i < numArtificial_; i++) {
@@ -863,3 +864,6 @@ CoinWarmStartBasisDiff::~CoinWarmStartBasisDiff()
     delete[] diff;
   }
 }
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

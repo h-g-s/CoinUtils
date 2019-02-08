@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinLpIO.cpp 2088 2019-01-22 09:15:46Z forrest $ */
 // Last edit: 11/5/08
 //
 // Name:     CoinLpIO.cpp; Support for Lp files
@@ -58,6 +58,7 @@ CoinLpIO::CoinLpIO()
   , epsilon_(1e-5)
   , numberAcross_(10)
   , decimals_(9)
+  , input_(NULL)
 {
   for (int j = 0; j < MAX_OBJECTIVES; j++) {
     objective_[j] = NULL;
@@ -79,7 +80,6 @@ CoinLpIO::CoinLpIO()
   names_[1] = NULL;
   handler_ = new CoinMessageHandler();
   messages_ = CoinMessage();
-  fp_ = NULL;
 }
 
 //-------------------------------------------------------------------
@@ -107,6 +107,7 @@ CoinLpIO::CoinLpIO(const CoinLpIO &rhs)
   , infinity_(COIN_DBL_MAX)
   , epsilon_(1e-5)
   , numberAcross_(10)
+  , input_(NULL)
 {
   num_objectives_ = rhs.num_objectives_;
   for (int j = 0; j < MAX_OBJECTIVES; j++) {
@@ -144,7 +145,6 @@ CoinLpIO::CoinLpIO(const CoinLpIO &rhs)
   }
 
   messages_ = CoinMessage();
-  fp_ = NULL;
 }
 
 void CoinLpIO::gutsOfCopy(const CoinLpIO &rhs)
@@ -329,6 +329,8 @@ void CoinLpIO::freeAll()
 
   freePreviousNames(0);
   freePreviousNames(1);
+  delete input_;
+  input_ = NULL;
 }
 
 /*************************************************************************/
@@ -1309,7 +1311,7 @@ int CoinLpIO::writeLp(FILE *fp, const bool useRowNames)
 } /* writeLp */
 
 /*************************************************************************/
-int CoinLpIO::find_obj(FILE *fp) const
+int CoinLpIO::find_obj() const
 {
 
   char buff[1024];
@@ -1319,10 +1321,10 @@ int CoinLpIO::find_obj(FILE *fp) const
 
   while (((lbuff != 8) || (CoinStrNCaseCmp(buff, "minimize", 8) != 0)) && ((lbuff != 3) || (CoinStrNCaseCmp(buff, "min", 3) != 0)) && ((lbuff != 8) || (CoinStrNCaseCmp(buff, "maximize", 8) != 0)) && ((lbuff != 3) || (CoinStrNCaseCmp(buff, "max", 3) != 0))) {
 
-    scan_next(buff, fp);
+    int x = fscanfLpIO(buff);
     lbuff = strlen(buff);
 
-    if (feof(fp)) {
+    if (x <= 0) {
       char str[8192];
       sprintf(str, "### ERROR: Unable to locate objective function\n");
       throw CoinError(str, "find_obj", "CoinLpIO", __FILE__, __LINE__);
@@ -1422,28 +1424,11 @@ int CoinLpIO::is_comment(const char *buff) const
   return (0);
 } /* is_comment */
 
-#define NEW_SCANF
-
 /*************************************************************************/
-void CoinLpIO::skip_comment(char *buff, FILE *fp) const
+void CoinLpIO::skip_comment(char *buff) const
 {
 
   while (strcspn(buff, "\n") == strlen(buff)) { // end of line not read yet
-    if (feof(fp)) {
-      char str[8192];
-      sprintf(str, "### ERROR: end of file reached while skipping comment\n");
-      throw CoinError(str, "skip_comment", "CoinLpIO", __FILE__, __LINE__);
-    }
-    if (ferror(fp)) {
-      char str[8192];
-      sprintf(str, "### ERROR: error while skipping comment\n");
-      throw CoinError(str, "skip_comment", "CoinLpIO", __FILE__, __LINE__);
-    }
-#ifndef NEW_SCANF
-    char *x = fgets(buff, sizeof(buff), fp);
-    if (!x)
-      throw("bad fgets");
-#else
     // keep going until in correct buffer
     while (bufferLength_ < 0) {
       if (fscanfLpIO(buff) == 0)
@@ -1452,40 +1437,8 @@ void CoinLpIO::skip_comment(char *buff, FILE *fp) const
     // and throw away
     bufferPosition_ = bufferLength_;
     break;
-#endif
   }
 } /* skip_comment */
-/*************************************************************************/
-void CoinLpIO::scan_next(char *buff, FILE *fp) const
-{
-
-#ifndef NEW_SCANF
-  int x = fscanf(fp, "%s", buff);
-#else
-  int x = fscanfLpIO(buff);
-#endif
-  if (x <= 0) {
-    handler_->message(COIN_GENERAL_WARNING, messages_) << "### CoinLpIO::scan_next(): End inserted" << CoinMessageEol;
-    strcpy(buff, "End");
-  }
-  while (is_comment(buff)) {
-    skip_comment(buff, fp);
-#ifndef NEW_SCANF
-    x = fscanf(fp, "%s", buff);
-#else
-    x = fscanfLpIO(buff);
-#endif
-    if (x <= 0) {
-      handler_->message(COIN_GENERAL_WARNING, messages_) << "### CoinLpIO::scan_next(): field expected" << CoinMessageEol;
-      throw("bad fscanf");
-    }
-  }
-
-#ifdef LPIO_DEBUG
-  printf("CoinLpIO::scan_next: (%s)\n", buff);
-#endif
-
-} /* scan_next */
 
 /*************************************************************************/
 int CoinLpIO::is_invalid_name(const char *name,
@@ -1578,7 +1531,7 @@ int CoinLpIO::are_invalid_names(char const *const *const vnames,
 } /* are_invalid_names */
 
 /*************************************************************************/
-int CoinLpIO::read_monom_obj(FILE *fp, double *coeff, char **name, int *cnt,
+int CoinLpIO::read_monom_obj(double *coeff, char **name, int *cnt,
   char **obj_name, int *num_objectives, int *obj_starts)
 {
 
@@ -1586,9 +1539,9 @@ int CoinLpIO::read_monom_obj(FILE *fp, double *coeff, char **name, int *cnt,
   char buff[1024] = "aa", loc_name[1024], *start;
   int read_st = 0;
 
-  scan_next(buff, fp);
+  int x = fscanfLpIO(buff);
 
-  if (feof(fp)) {
+  if (x <= 0) {
     char str[8192];
     sprintf(str, "### ERROR: Unable to read objective function\n");
     throw CoinError(str, "read_monom_obj", "CoinLpIO", __FILE__, __LINE__);
@@ -1631,7 +1584,7 @@ int CoinLpIO::read_monom_obj(FILE *fp, double *coeff, char **name, int *cnt,
   if (buff[0] == '+') {
     mult = 1;
     if (strlen(buff) == 1) {
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
       start = buff;
     } else {
       start = &(buff[1]);
@@ -1641,7 +1594,7 @@ int CoinLpIO::read_monom_obj(FILE *fp, double *coeff, char **name, int *cnt,
   if (buff[0] == '-') {
     mult = -1;
     if (strlen(buff) == 1) {
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
       start = buff;
     } else {
       start = &(buff[1]);
@@ -1651,7 +1604,7 @@ int CoinLpIO::read_monom_obj(FILE *fp, double *coeff, char **name, int *cnt,
   if (first_is_number(start)) {
     coeff[*cnt] = atof(start);
     sprintf(loc_name, "aa");
-    scan_next(loc_name, fp);
+    fscanfLpIO(loc_name);
   } else {
     coeff[*cnt] = 1;
     strcpy(loc_name, start);
@@ -1686,7 +1639,7 @@ int CoinLpIO::read_monom_obj(FILE *fp, double *coeff, char **name, int *cnt,
 } /* read_monom_obj */
 
 /*************************************************************************/
-int CoinLpIO::read_monom_row(FILE *fp, char *start_str,
+int CoinLpIO::read_monom_row(char *start_str,
   double *coeff, char **name,
   int cnt_coeff) const
 {
@@ -1706,7 +1659,7 @@ int CoinLpIO::read_monom_row(FILE *fp, char *start_str,
   if (buff[0] == '+') {
     mult = 1;
     if (strlen(buff) == 1) {
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
       start = buff;
     } else {
       start = &(buff[1]);
@@ -1716,7 +1669,7 @@ int CoinLpIO::read_monom_row(FILE *fp, char *start_str,
   if (buff[0] == '-') {
     mult = -1;
     if (strlen(buff) == 1) {
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
       start = buff;
     } else {
       start = &(buff[1]);
@@ -1725,7 +1678,7 @@ int CoinLpIO::read_monom_row(FILE *fp, char *start_str,
 
   if (first_is_number(start)) {
     coeff[cnt_coeff] = atof(start);
-    scan_next(loc_name, fp);
+    fscanfLpIO(loc_name);
   } else {
     coeff[cnt_coeff] = 1;
     strcpy(loc_name, start);
@@ -1793,7 +1746,7 @@ void CoinLpIO::realloc_col(double **collow, double **colup, char **is_int,
 } /* realloc_col */
 
 /*************************************************************************/
-void CoinLpIO::read_row(FILE *fp, char *buff,
+void CoinLpIO::read_row(char *buff,
   double **pcoeff, char ***pcolNames,
   int *cnt_coeff,
   int *maxcoeff,
@@ -1811,16 +1764,16 @@ void CoinLpIO::read_row(FILE *fp, char *buff,
     if ((*cnt_coeff) == (*maxcoeff)) {
       realloc_coeff(pcoeff, pcolNames, maxcoeff);
     }
-    read_sense = read_monom_row(fp, start_str,
+    read_sense = read_monom_row(start_str,
       *pcoeff, *pcolNames, *cnt_coeff);
 #ifdef KILL_ZERO_READLP
     if (read_sense != -2) // see if zero
 #endif
       (*cnt_coeff)++;
 
-    scan_next(start_str, fp);
+    int x = fscanfLpIO(start_str);
 
-    if (feof(fp)) {
+    if (x <= 0) {
       char str[8192];
       sprintf(str, "### ERROR: Unable to read row monomial\n");
       throw CoinError(str, "read_monom_row", "CoinLpIO", __FILE__, __LINE__);
@@ -1898,14 +1851,29 @@ void CoinLpIO::readLp(const char *filename, const double epsilon)
 /*************************************************************************/
 void CoinLpIO::readLp(const char *filename)
 {
-  FILE *fp = fopen(filename, "r");
-  if (!fp) {
+  delete input_;
+  input_ = NULL;
+  bool readable = false;
+  // see if just .lp
+  int length = strlen(filename);
+  if ((length > 3 && !strncmp(filename + length - 3, ".lp", 3))) {
+    FILE *fp = fopen(filename, "r");
+    if (fp) {
+      readable = true;
+      input_ = new CoinPlainFileInput(fp);
+    }
+  } else if (strstr(filename, ".lp")) {
+    std::string fname(filename);
+    readable = fileCoinReadable(fname);
+    if (readable)
+      input_ = CoinFileInput::create(fname);
+  }
+  if (!readable) {
     char str[8192];
     sprintf(str, "### ERROR: Unable to open file %s for reading\n", filename);
     throw CoinError(str, "readLp", "CoinLpIO", __FILE__, __LINE__);
   }
-  readLp(fp);
-  fclose(fp);
+  readLp();
 }
 
 /*************************************************************************/
@@ -1918,6 +1886,13 @@ void CoinLpIO::readLp(FILE *fp, const double epsilon)
 /*************************************************************************/
 void CoinLpIO::readLp(FILE *fp)
 {
+  delete input_;
+  input_ = new CoinPlainFileInput(fp);
+  readLp();
+}
+/*************************************************************************/
+void CoinLpIO::readLp()
+{
 
   int maxrow = 1000;
   int maxcoeff = 40000;
@@ -1925,9 +1900,9 @@ void CoinLpIO::readLp(FILE *fp)
   double lp_inf = getInfinity();
 
   char buff[1024];
-  fp_ = fp;
   bufferPosition_ = 0;
   bufferLength_ = 0;
+  eofFound_ = false;
 
   int objsense, cnt_coeff = 0, cnt_row = 0, cnt_obj = 0;
   int num_objectives = 0;
@@ -1943,11 +1918,11 @@ void CoinLpIO::readLp(FILE *fp)
 
   int i;
 
-  objsense = find_obj(fp);
+  objsense = find_obj();
 
   int read_st = 0;
   while (!read_st) {
-    read_st = read_monom_obj(fp, coeff, colNames, &cnt_obj, objName, &num_objectives, obj_starts);
+    read_st = read_monom_obj(coeff, colNames, &cnt_obj, objName, &num_objectives, obj_starts);
 
     if (cnt_obj == maxcoeff) {
       realloc_coeff(&coeff, &colNames, &maxcoeff);
@@ -1959,11 +1934,7 @@ void CoinLpIO::readLp(FILE *fp)
   cnt_coeff = cnt_obj;
 
   if (read_st == 2) {
-#ifndef NEW_SCANF
-    int x = fscanf(fp, "%s", buff);
-#else
     int x = fscanfLpIO(buff);
-#endif
     if (x <= 0)
       throw("bad fscanf");
     size_t lbuff = strlen(buff);
@@ -1975,7 +1946,7 @@ void CoinLpIO::readLp(FILE *fp)
     }
   }
 
-  scan_next(buff, fp);
+  fscanfLpIO(buff);
 
   while (!is_keyword(buff)) {
     if (buff[strlen(buff) - 1] == ':') {
@@ -1986,16 +1957,16 @@ void CoinLpIO::readLp(FILE *fp)
 #endif
 
       rowNames[cnt_row] = CoinStrdup(buff);
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
     } else {
       char rname[15];
       sprintf(rname, "cons%d", cnt_row);
       rowNames[cnt_row] = CoinStrdup(rname);
     }
-    read_row(fp, buff,
+    read_row(buff,
       &coeff, &colNames, &cnt_coeff, &maxcoeff, rhs, rowlow, rowup,
       &cnt_row, lp_inf);
-    scan_next(buff, fp);
+    fscanfLpIO(buff);
     start[cnt_row] = cnt_coeff;
 
     if (cnt_row == maxrow) {
@@ -2031,7 +2002,7 @@ void CoinLpIO::readLp(FILE *fp)
     switch (is_keyword(buff)) {
 
     case 1: /* Bounds section */
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
 
       while (is_keyword(buff) == 0) {
 
@@ -2043,7 +2014,7 @@ void CoinLpIO::readLp(FILE *fp)
         if (buff[0] == '-' || buff[0] == '+') {
           mult = (buff[0] == '-') ? -1 : +1;
           if (strlen(buff) == 1) {
-            scan_next(buff, fp);
+            fscanfLpIO(buff);
             start_str = buff;
           } else {
             start_str = &(buff[1]);
@@ -2061,14 +2032,14 @@ void CoinLpIO::readLp(FILE *fp)
           }
         }
         if (scan_sense) {
-          scan_next(buff, fp);
+          fscanfLpIO(buff);
           read_sense1 = is_sense(buff);
           if (read_sense1 < 0) {
             char str[8192];
             sprintf(str, "### ERROR: Bounds; expect a sense, get: %s\n", buff);
             throw CoinError(str, "readLp", "CoinLpIO", __FILE__, __LINE__);
           }
-          scan_next(buff, fp);
+          fscanfLpIO(buff);
         }
 
         icol = findHash(buff, 1);
@@ -2084,21 +2055,21 @@ void CoinLpIO::readLp(FILE *fp)
           }
         }
 
-        scan_next(buff, fp);
+        fscanfLpIO(buff);
         if (is_free(buff)) {
           collow[icol] = -lp_inf;
-          scan_next(buff, fp);
+          fscanfLpIO(buff);
         } else {
           read_sense2 = is_sense(buff);
           if (read_sense2 > -1) {
-            scan_next(buff, fp);
+            fscanfLpIO(buff);
             mult = 1;
             start_str = buff;
 
             if (buff[0] == '-' || buff[0] == '+') {
               mult = (buff[0] == '-') ? -1 : +1;
               if (strlen(buff) == 1) {
-                scan_next(buff, fp);
+                fscanfLpIO(buff);
                 start_str = buff;
               } else {
                 start_str = &(buff[1]);
@@ -2106,11 +2077,11 @@ void CoinLpIO::readLp(FILE *fp)
             }
             if (first_is_number(start_str)) {
               bnd2 = mult * atof(start_str);
-              scan_next(buff, fp);
+              fscanfLpIO(buff);
             } else {
               if (is_inf(start_str)) {
                 bnd2 = mult * lp_inf;
-                scan_next(buff, fp);
+                fscanfLpIO(buff);
               } else {
                 char str[8192];
                 sprintf(str, "### ERROR: Bounds; expect a number, get: %s\n",
@@ -2182,7 +2153,7 @@ void CoinLpIO::readLp(FILE *fp)
 
     case 2: /* Integers/Generals section */
 
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
 
       while (is_keyword(buff) == 0) {
 
@@ -2214,13 +2185,13 @@ void CoinLpIO::readLp(FILE *fp)
         else
           is_int[icol] = 1;
         has_int = 1;
-        scan_next(buff, fp);
+        fscanfLpIO(buff);
       };
       break;
 
     case 3: /* Binaries section */
 
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
 
       while (is_keyword(buff) == 0) {
 
@@ -2255,12 +2226,12 @@ void CoinLpIO::readLp(FILE *fp)
         if (colup[icol] > 1) {
           colup[icol] = 1;
         }
-        scan_next(buff, fp);
+        fscanfLpIO(buff);
       }
       break;
     case 4: /* Semis section */
 
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
 
       while (is_keyword(buff) == 0) {
 
@@ -2292,7 +2263,7 @@ void CoinLpIO::readLp(FILE *fp)
         else
           is_int[icol] = 3;
         has_int = 1;
-        scan_next(buff, fp);
+        fscanfLpIO(buff);
       };
       break;
 
@@ -2307,7 +2278,7 @@ void CoinLpIO::readLp(FILE *fp)
       char printBuffer[512];
       int numberBad = 0;
       bool maybeSetName;
-      scan_next(buff, fp);
+      fscanfLpIO(buff);
       while (true) {
         int numberEntries = 0;
         int setType = -1;
@@ -2329,7 +2300,7 @@ void CoinLpIO::readLp(FILE *fp)
                     // merge to get rid of space
                     char temp[200];
                     strcpy(temp, buff);
-                    scan_next(buff, fp); // try again
+                    fscanfLpIO(buff); // try again
                     strcat(temp, buff);
                     strcpy(buff, temp);
                     if (maybeSetName) {
@@ -2372,7 +2343,7 @@ void CoinLpIO::readLp(FILE *fp)
             endLine = true;
           }
           while (!endLine) {
-            scan_next(buff, fp);
+            fscanfLpIO(buff);
             if (is_keyword(buff) == 0 && !strstr(buff, "::")) {
               // expect pair
               char *start_str = buff;
@@ -2388,7 +2359,7 @@ void CoinLpIO::readLp(FILE *fp)
                   int length = strlen(next + 1);
                   if (!length) {
                     // assume user put in spaces
-                    scan_next(buff, fp);
+                    fscanfLpIO(buff);
                     if (is_keyword(buff) != 0 || strstr(buff, "::")) {
                       goodLine = 0;
                     } else {
@@ -2980,9 +2951,23 @@ int CoinLpIO::newCardLpIO() const
     // new line
     bufferPosition_ = 0;
     bufferLength_ = 0;
-    char *ok = fgets(inputBuffer_, 1024, fp_);
+    char *ok = input_->gets(inputBuffer_, 1024);
     if (!ok)
       return 0;
+    int length = strlen(inputBuffer_);
+    // take off blanks or below
+    if (length  && length < 1023) {
+      length--;
+      while(length>=0) {
+	if (inputBuffer_[length]<=' ')
+	  length--;
+	else
+	  break;
+      }
+      // but put back something
+      inputBuffer_[length+1]='\n';  
+      inputBuffer_[length+2]='\0';
+    }
     // go to single blanks and remove all blanks before :: or :
     char *colons = strstr(inputBuffer_, "::");
     int nn = 0;
@@ -3026,11 +3011,16 @@ int CoinLpIO::newCardLpIO() const
 // Get next string (returns number in)
 int CoinLpIO::fscanfLpIO(char *buff) const
 {
-  assert(fp_);
+  assert(input_);
   if (bufferPosition_ == bufferLength_) {
     int returnCode = newCardLpIO();
-    if (!returnCode)
-      return 0;
+    if (!returnCode) {
+      if (eofFound_)
+        return 0;
+      eofFound_ = true;
+      handler_->message(COIN_GENERAL_WARNING, messages_) << "### CoinLpIO::scan_next(): End inserted" << CoinMessageEol;
+      strcpy(buff, "End");
+    }
   }
   char *space = strchr(inputBuffer_ + bufferPosition_, ' ');
   int n = 0;
@@ -3065,5 +3055,16 @@ int CoinLpIO::fscanfLpIO(char *buff) const
   if (inputBuffer_[bufferPosition_] == ' ')
     bufferPosition_++;
   buff[start + n] = '\0';
+  while (is_comment(buff)) {
+    skip_comment(buff);
+    int x = fscanfLpIO(buff);
+    if (x <= 0) {
+      handler_->message(COIN_GENERAL_WARNING, messages_) << "### CoinLpIO::scan_next(): field expected" << CoinMessageEol;
+      throw("bad fscanf");
+    }
+  }
   return n + start;
 }
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

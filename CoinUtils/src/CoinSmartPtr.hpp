@@ -543,3 +543,6 @@ bool operator!=(U1 *raw_lhs, const Coin::SmartPtr< U2 > &rhs)
 #define CoinComparePointers Coin::ComparePointers
 
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

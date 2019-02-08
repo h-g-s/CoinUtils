@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinOslFactorization.hpp 2084 2019-01-09 14:17:08Z forrest $ */
 // Copyright (C) 1987, 2009, International Business Machines
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
@@ -129,8 +129,8 @@ public:
   /// Gets space for a factorization
   virtual void getAreas(int numberRows,
     int numberColumns,
-    CoinBigIndex maximumL,
-    CoinBigIndex maximumU);
+    int maximumL,
+    int maximumU);
 
   /// PreProcesses column ordered copy of basis
   virtual void preProcess();
@@ -176,7 +176,7 @@ public:
   /// Number of entries in each column
   virtual int *numberInColumn() const;
   /// Returns array to put basis starts in
-  virtual CoinBigIndex *starts() const;
+  virtual int *starts() const;
   /// Returns permute back
   virtual int *permuteBack() const;
   /// Returns true if wants tableauColumn in replaceColumn
@@ -282,3 +282,6 @@ protected:
   //@}
 };
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

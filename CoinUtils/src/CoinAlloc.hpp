@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinAlloc.hpp 2083 2019-01-06 19:38:09Z unxusr $ */
 // Copyright (C) 2007, International Business Machines
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
@@ -174,3 +174,6 @@ void operator delete[](void *, const std::nothrow_t &) throw();
 
 #endif /*(COINUTILS_MEMPOOL_MAXPOOLED >= 0)*/
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

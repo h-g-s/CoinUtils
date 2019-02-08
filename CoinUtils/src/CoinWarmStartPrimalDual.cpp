@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinWarmStartPrimalDual.cpp 2083 2019-01-06 19:38:09Z unxusr $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
@@ -70,3 +70,6 @@ void CoinWarmStartPrimalDual::applyDiff(const CoinWarmStartDiff *const cwsdDiff)
   primal_.applyDiff(&diff->primalDiff_);
   dual_.applyDiff(&diff->dualDiff_);
 }
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinOslFactorization.cpp 2083 2019-01-06 19:38:09Z unxusr $ */
 // Copyright (C) 1987, 2009, International Business Machines
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
@@ -1489,3 +1489,6 @@ CoinOslFactorization::conditionNumber() const
   return 1.0 / condition;
 }
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

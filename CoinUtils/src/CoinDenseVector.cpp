@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinDenseVector.cpp 2083 2019-01-06 19:38:09Z unxusr $ */
 // Copyright (C) 2003, International Business Machines
 // Corporation and others.  All Rights Resized.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
@@ -213,3 +213,6 @@ T &
 // template class CoinDenseVector<int>; This works but causes warning messages
 template class CoinDenseVector< float >;
 template class CoinDenseVector< double >;
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

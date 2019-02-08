@@ -84,3 +84,6 @@ bool CoinRational::nearestRational_(double val, double maxdelta, long maxdnom)
 #endif
   return fabs(val - numerator_ / double(denominator_)) <= maxdelta;
 }
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

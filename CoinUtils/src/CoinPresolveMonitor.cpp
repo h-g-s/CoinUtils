@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinPresolveMonitor.cpp 2083 2019-01-06 19:38:09Z unxusr $ */
 // Copyright (C) 2011 Lou Hafer
 // This code is licensed under the terms of the Eclipse Public License (EPL).
 
@@ -303,3 +303,6 @@ void CoinPresolveMonitor::checkAndTell(CoinPackedVector *curVec,
             << "  " << diffcnt << " changes." << std::endl;
   delete[] mergedIndices;
 }
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

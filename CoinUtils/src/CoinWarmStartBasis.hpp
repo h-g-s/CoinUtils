@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinWarmStartBasis.hpp 2083 2019-01-06 19:38:09Z unxusr $ */
 /*! \legal
   Copyright (C) 2000 -- 2003, International Business Machines Corporation
   and others.  All Rights Reserved.
@@ -463,3 +463,6 @@ private:
 };
 
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

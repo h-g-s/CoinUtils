@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinOslFactorization3.cpp 2083 2019-01-06 19:38:09Z unxusr $ */
 /*
   Copyright (C) 1987, 2009, International Business Machines
   Corporation and others.  All Rights Reserved.
@@ -3105,3 +3105,6 @@ int c_ekktria(EKKfactinfo *fact,
   return (irtcod);
 } /* c_ekktria */
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

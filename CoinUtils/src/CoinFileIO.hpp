@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinFileIO.hpp 2083 2019-01-06 19:38:09Z unxusr $ */
 // Copyright (C) 2005, COIN-OR.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
 
@@ -180,3 +180,6 @@ bool fileAbsPath(const std::string &path);
 bool fileCoinReadable(std::string &name,
   const std::string &dfltPrefix = std::string(""));
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

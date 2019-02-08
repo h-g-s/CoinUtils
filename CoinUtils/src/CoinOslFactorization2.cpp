@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinOslFactorization2.cpp 2083 2019-01-06 19:38:09Z unxusr $ */
 /*
   Copyright (C) 1987, 2009, International Business Machines
   Corporation and others.  All Rights Reserved.
@@ -4166,3 +4166,6 @@ void c_ekkftrn2(COIN_REGISTER EKKfactinfo *COIN_RESTRICT2 fact, double *COIN_RES
     dpermu1, lastSlack, dwork1, mpt1);
 }
 #endif
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/

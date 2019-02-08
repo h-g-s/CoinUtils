@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: CoinIndexedVector.cpp 2084 2019-01-09 14:17:08Z forrest $ */
 // Copyright (C) 2000, International Business Machines
 // Corporation and others.  All Rights Reserved.
 // This code is licensed under the terms of the Eclipse Public License (EPL).
@@ -1900,7 +1900,7 @@ void CoinArrayWithLength::copy(const CoinArrayWithLength &rhs, int numberBytes)
   }
 }
 /* Assignment with length - does not copy */
-void CoinArrayWithLength::allocate(const CoinArrayWithLength &rhs, int numberBytes)
+void CoinArrayWithLength::allocate(const CoinArrayWithLength &rhs, CoinBigIndex numberBytes)
 {
   if (numberBytes == -1 || numberBytes <= rhs.capacity()) {
     assert(rhs.size_ != -1 || !rhs.array_);
@@ -2256,3 +2256,6 @@ void CoinPartitionedVector::sort()
     CoinSort_2(indices, indices + numberElementsPartition_[partition], elements);
   }
 }
+
+/* vi: softtabstop=2 shiftwidth=2 expandtab tabstop=2
+*/
