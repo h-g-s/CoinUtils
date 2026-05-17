@@ -33,17 +33,11 @@
 /* Define to 1 if cstdint is available for CoinUtils */
 #undef COINUTILS_HAS_CSTDINT
 
-/* Define to 1 if Glpk is available. */
-#undef COINUTILS_HAS_GLPK
-
 /* Define to 1 if the LAPACK package is available */
 #undef COINUTILS_HAS_LAPACK
 
 /* Define to 1 if Netlib is available. */
 #undef COINUTILS_HAS_NETLIB
-
-/* Define to 1 if readline is available */
-#undef COINUTILS_HAS_READLINE
 
 /* Define to 1 if Sample is available. */
 #undef COINUTILS_HAS_SAMPLE
@@ -129,9 +123,6 @@
 
 /* Define to 1 if you have the 'bz2' library (-lbz2). */
 #undef HAVE_LIBBZ2
-
-/* Define to 1 if you have the 'readline' library (-lreadline). */
-#undef HAVE_LIBREADLINE
 
 /* Define to 1 if you have the 'z' library (-lz). */
 #undef HAVE_LIBZ

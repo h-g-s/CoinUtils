@@ -9,10 +9,6 @@
 #include <iostream>
 #include <sstream>
 #include <algorithm>
-#ifdef COINUTILS_HAS_READLINE
-#include <readline/readline.h>
-#include <readline/history.h>
-#endif
 
 #include "CoinPragma.hpp"
 #include "CoinParam.hpp"
@@ -950,7 +946,6 @@ int CoinParam::kwdToMode(std::string input) const
     }
   }
 
-
   if (whichItem != -987654321) {
     // ? what to do about multiple matches
     if (numberMatches>1) {
@@ -1135,7 +1130,6 @@ std::string CoinParam::modeString(int value) const
   abort;
   return "";
 }
-
 
 /*
   Return the string corresponding to the current value.

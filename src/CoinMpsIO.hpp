@@ -18,9 +18,6 @@
 #include "CoinMessageHandler.hpp"
 #include "CoinFileIO.hpp"
 
-#ifdef COINUTILS_HAS_GLPK
-#include "glpk.h"
-#endif
 
 class CoinModel;
 
@@ -765,12 +762,6 @@ public:
   /// and
   int readGms(int &numberSets, CoinSet **&sets);
 
-#ifdef COINUTILS_HAS_GLPK
-  /** Read a problem in GMPL (subset of AMPL)  format from the given filenames.
-    */
-  int readGMPL(const char *modelName, const char *dataName = NULL, bool keepNames = false,
-               glp_tran **coin_glp_tran = NULL, glp_prob **coin_glp_prob = NULL);
-#endif
   
   /** Write the problem in MPS format to a file with the given filename.
 

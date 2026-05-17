@@ -676,8 +676,6 @@ COINUTILSTEST_CFLAGS_NOPC
 COINUTILSTEST_LFLAGS_NOPC
 COINUTILSLIB_CFLAGS_NOPC
 COINUTILSLIB_LFLAGS_NOPC
-COIN_HAS_READLINE_FALSE
-COIN_HAS_READLINE_TRUE
 COIN_HAS_BZLIB_FALSE
 COIN_HAS_BZLIB_TRUE
 COIN_HAS_ZLIB_FALSE
@@ -690,11 +688,6 @@ COIN_HAS_SAMPLE_FALSE
 COIN_HAS_SAMPLE_TRUE
 COIN_HAS_ASL_FALSE
 COIN_HAS_ASL_TRUE
-COIN_HAS_GLPK_FALSE
-COIN_HAS_GLPK_TRUE
-COINUTILSTEST_PCFILES
-COINUTILSTEST_CFLAGS
-COINUTILSTEST_LFLAGS
 COINUTILSLIB_CFLAGS
 COIN_HAS_LAPACK_FALSE
 COIN_HAS_LAPACK_TRUE
@@ -871,9 +864,6 @@ enable_coinutils_mempool_maxpooled
 enable_coinutils_mempool_override_new
 with_lapack
 with_lapack_lflags
-with_glpk
-with_glpk_lflags
-with_glpk_cflags
 with_asl
 with_asl_lflags
 with_asl_cflags
@@ -883,7 +873,6 @@ with_netlib
 with_netlib_data
 enable_zlib
 enable_bzlib
-enable_readline
 with_dot
 '
       ac_precious_vars='build_alias
@@ -1572,7 +1561,6 @@ Optional Features:
                           Redirects global new/delete to CoinUtils mempool.
   --disable-zlib          do not compile with compression library zlib
   --disable-bzlib         do not compile with compression library bzlib
-  --disable-readline      do not compile with readline library
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1591,16 +1579,6 @@ Optional Packages:
                           as for --with-lapack-lflags.
   --with-lapack-lflags    Linker flags for lapack appropriate for your
                           environment. (Most often, -l specs for libraries.)
-  --without-glpk          Do not use Glpk. If an argument is given to
-                          --with-glpk, then 'yes' is equivalent to
-                          --with-glpk, 'no' is equivalent to
-                          --without-glpk and any other argument is applied as
-                          for --with-glpk-lflags.
-  --with-glpk-lflags      Linker flags for Glpk appropriate for your
-                          environment. (Most often, -l specs for libraries.)
-  --with-glpk-cflags      Compiler flags for Glpk appropriate for your
-                          environment. (Most often, -I specs for header file
-                          directories.)
   --without-asl           Do not use ASL. If an argument is given to
                           --with-asl, then 'yes' is equivalent to
                           --with-asl, 'no' is equivalent to
@@ -21495,254 +21473,6 @@ printf "%s\n" "$as_me: WARNING: Unsupported or unknown name-mangling scheme: ${d
 
 
 
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for package Glpk" >&5
-printf %s "checking for package Glpk... " >&6; }
-
-
-
-
-
-
-
-
-
-
-
-  coin_has_glpk=noInfo
-  if test x"$COIN_SKIP_PROJECTS" != x ; then
-    for pkg in `echo $COIN_SKIP_PROJECTS | tr '[:upper:]' '[:lower:]'` ; do
-      if test "$pkg" = "glpk" ; then
-        coin_has_glpk=skipping
-      fi
-    done
-  fi
-
-
-  if test "$coin_has_glpk" != skipping ; then
-
-
-
-
-# Check whether --with-glpk was given.
-if test ${with_glpk+y}
-then :
-  withval=$with_glpk;
-fi
-
-
-
-# Check whether --with-glpk-lflags was given.
-if test ${with_glpk_lflags+y}
-then :
-  withval=$with_glpk_lflags;
-fi
-
-
-
-# Check whether --with-glpk-cflags was given.
-if test ${with_glpk_cflags+y}
-then :
-  withval=$with_glpk_cflags;
-fi
-
-
-
-
-
-
-
-
-
-
-
-
-  coin_has_glpk=requested
-
-  glpk_lflags=
-  glpk_cflags=
-  glpk_data=
-  glpk_pcfiles="coinglpk"
-
-
-  withval="$with_glpk"
-  if test -n "$withval" ; then
-    case "$withval" in
-      no )
-        coin_has_glpk=skipping
-        glpk_failmode='command line'
-        ;;
-      yes )
-        coin_has_glpk=requested
-        glpk_failmode=''
-        ;;
-      build )
-        coin_has_glpk=requested
-        glpk_build=yes
-        glpk_failmode=''
-        ;;
-      * )
-        coin_has_glpk=requested
-        glpk_failmode=''
-        glpk_lflags="$withval"
-        glpk_pcfiles=''
-        ;;
-    esac
-  else
-    if test -n "$with_glpk_lflags" ||
-       test -n "$with_glpk_cflags" ||
-       test -n "$with_glpk_data" ; then
-      coin_has_glpk=requested
-      glpk_failmode=''
-      glpk_pcfiles=''
-    fi
-  fi
-
-
-  if test "$coin_has_glpk" != skipping ; then
-       withval="$with_glpk_lflags"
-       if test -n "$withval" ; then
-         case "$withval" in
-           build | no | yes )
-             as_fn_error $? "\"$withval\" is not useful here; please specify link flags appropriate for your environment." "$LINENO" 5
-             ;;
-           * )
-             coin_has_glpk=yes
-             glpk_lflags="$withval"
-             glpk_pcfiles=''
-             ;;
-         esac
-       fi
-
-       withval="$with_glpk_cflags"
-       if test -n "$withval" ; then
-         case "$withval" in
-           build | no | yes )
-             as_fn_error $? "\"$withval\" is not useful here; please specify compile flags appropriate for your environment." "$LINENO" 5
-             ;;
-           * )
-             coin_has_glpk=yes
-             glpk_cflags="$withval"
-             glpk_pcfiles=''
-             ;;
-         esac
-       fi
-     fi
-
-
-
-
-
-  if test $coin_has_glpk = requested ; then
-    if test -n "$PKG_CONFIG" ; then
-      if test x"$glpk_build" = xyes ; then
-        pcfile="coin$glpk_pcfiles"
-
-
-
-  if test -n "$PKG_CONFIG" ; then
-    if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$pcfile" ; then
-      GLPK_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$pcfile" 2>/dev/null | tr '\n' ' '`
-      coin_has_glpk=yes
-    else
-      GLPK_PKG_ERRORS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$pcfile"`
-      coin_has_glpk=no
-    fi
-  else
-    as_fn_error $? "\"Cannot check for existence of module glpk without pkgconf\"" "$LINENO" 5
-  fi
-
-      fi
-      if ! test $coin_has_glpk = yes ; then
-        pcfile="$glpk_pcfiles"
-
-
-
-  if test -n "$PKG_CONFIG" ; then
-    if PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --exists "$pcfile" ; then
-      GLPK_VERSIONS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --modversion "$pcfile" 2>/dev/null | tr '\n' ' '`
-      coin_has_glpk=yes
-    else
-      GLPK_PKG_ERRORS=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG $pkg_short_errors --errors-to-stdout --print-errors "$pcfile"`
-      coin_has_glpk=no
-    fi
-  else
-    as_fn_error $? "\"Cannot check for existence of module glpk without pkgconf\"" "$LINENO" 5
-  fi
-
-      fi
-      if test $coin_has_glpk = yes ; then
-        glpk_data=`PKG_CONFIG_PATH="$COIN_PKG_CONFIG_PATH" $PKG_CONFIG --variable=datadir "$pcfile" 2>/dev/null`
-        glpk_pcfiles="$pcfile"
-      fi
-    else
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Check for glpk via pkg-config could not be performed as there is no pkg-config available. Consider installing pkg-config or provide appropriate values for --with-glpk-lflags and --with-glpk-cflags." >&5
-printf "%s\n" "$as_me: WARNING: Check for glpk via pkg-config could not be performed as there is no pkg-config available. Consider installing pkg-config or provide appropriate values for --with-glpk-lflags and --with-glpk-cflags." >&2;}
-      coin_has_glpk=no
-    fi
-  fi
-
-
-  if test "$BUILDTOOLS_DEBUG" = 1 ; then
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&5
-printf "%s\n" "$as_me: FIND_PRIM_PKG result for glpk: \"$coin_has_glpk\"" >&6;}
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Collected values for package 'glpk'" >&5
-printf "%s\n" "$as_me: Collected values for package 'glpk'" >&6;}
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: glpk_lflags is \"$glpk_lflags\"" >&5
-printf "%s\n" "$as_me: glpk_lflags is \"$glpk_lflags\"" >&6;}
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: glpk_cflags is \"$glpk_cflags\"" >&5
-printf "%s\n" "$as_me: glpk_cflags is \"$glpk_cflags\"" >&6;}
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: glpk_data is \"$glpk_data\"" >&5
-printf "%s\n" "$as_me: glpk_data is \"$glpk_data\"" >&6;}
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: glpk_pcfiles is \"$glpk_pcfiles\"" >&5
-printf "%s\n" "$as_me: glpk_pcfiles is \"$glpk_pcfiles\"" >&6;}
-  fi
-
-
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $coin_has_glpk" >&5
-printf "%s\n" "$coin_has_glpk" >&6; }
-  else
-    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $coin_has_glpk (COIN_SKIP_PROJECTS)" >&5
-printf "%s\n" "$coin_has_glpk (COIN_SKIP_PROJECTS)" >&6; }
-  fi
-
-
-  if test "$coin_has_glpk" != yes ; then
-    coin_has_glpk=no
-  fi
-
-
-   if test $coin_has_glpk = yes; then
-  COIN_HAS_GLPK_TRUE=
-  COIN_HAS_GLPK_FALSE='#'
-else
-  COIN_HAS_GLPK_TRUE='#'
-  COIN_HAS_GLPK_FALSE=
-fi
-
-
-
-  if test $coin_has_glpk = yes ; then
-
-printf "%s\n" "#define COINUTILS_HAS_GLPK 1" >>confdefs.h
-
-    COINUTILSLIB_PCFILES="$glpk_pcfiles $COINUTILSLIB_PCFILES"
-       COINUTILSLIB_LFLAGS="$glpk_lflags $COINUTILSLIB_LFLAGS"
-       COINUTILSLIB_CFLAGS="$glpk_cflags $COINUTILSLIB_CFLAGS"
-      COINUTILSTEST_PCFILES="$glpk_pcfiles $COINUTILSTEST_PCFILES"
-       COINUTILSTEST_LFLAGS="$glpk_lflags $COINUTILSTEST_LFLAGS"
-       COINUTILSTEST_CFLAGS="$glpk_cflags $COINUTILSTEST_CFLAGS"
-
-
-
-  fi
-
-
-
-
-
-
-
-
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for package ASL" >&5
 printf %s "checking for package ASL... " >&6; }
 
@@ -22654,166 +22384,6 @@ fi
 
 
 
-
-
-
-
-  coin_has_readline=no
-
-  # Check whether --enable-readline was given.
-if test ${enable_readline+y}
-then :
-  enableval=$enable_readline; coin_enable_readline=$enableval
-else case e in #(
-  e) coin_enable_readline=yes ;;
-esac
-fi
-
-
-  if test $coin_enable_readline = yes ; then
-    ac_fn_cxx_check_header_compile "$LINENO" "readline/readline.h" "ac_cv_header_readline_readline_h" "#include <stdio.h>
-"
-if test "x$ac_cv_header_readline_readline_h" = xyes
-then :
-  coin_has_readline=yes
-fi
-
-    coin_save_LIBS="$LIBS"
-    LIBS=
-    if test $coin_has_readline = yes ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing tputs" >&5
-printf %s "checking for library containing tputs... " >&6; }
-if test ${ac_cv_search_tputs+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_func_search_save_LIBS=$LIBS
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-namespace conftest {
-  extern "C" int tputs ();
-}
-int
-main (void)
-{
-return conftest::tputs ();
-  ;
-  return 0;
-}
-_ACEOF
-for ac_lib in '' ncurses termcap curses
-do
-  if test -z "$ac_lib"; then
-    ac_res="none required"
-  else
-    ac_res=-l$ac_lib
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-  fi
-  if ac_fn_cxx_try_link "$LINENO"
-then :
-  ac_cv_search_tputs=$ac_res
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext
-  if test ${ac_cv_search_tputs+y}
-then :
-  break
-fi
-done
-if test ${ac_cv_search_tputs+y}
-then :
-
-else case e in #(
-  e) ac_cv_search_tputs=no ;;
-esac
-fi
-rm conftest.$ac_ext
-LIBS=$ac_func_search_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_tputs" >&5
-printf "%s\n" "$ac_cv_search_tputs" >&6; }
-ac_res=$ac_cv_search_tputs
-if test "$ac_res" != no
-then :
-  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
-
-else case e in #(
-  e) coin_has_readline=no ;;
-esac
-fi
-
-    fi
-    if test $coin_has_readline = yes ; then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for readline in -lreadline" >&5
-printf %s "checking for readline in -lreadline... " >&6; }
-if test ${ac_cv_lib_readline_readline+y}
-then :
-  printf %s "(cached) " >&6
-else case e in #(
-  e) ac_check_lib_save_LIBS=$LIBS
-LIBS="-lreadline  $LIBS"
-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
-/* end confdefs.h.  */
-
-namespace conftest {
-  extern "C" int readline ();
-}
-int
-main (void)
-{
-return conftest::readline ();
-  ;
-  return 0;
-}
-_ACEOF
-if ac_fn_cxx_try_link "$LINENO"
-then :
-  ac_cv_lib_readline_readline=yes
-else case e in #(
-  e) ac_cv_lib_readline_readline=no ;;
-esac
-fi
-rm -f core conftest.err conftest.$ac_objext conftest.beam \
-    conftest$ac_exeext conftest.$ac_ext
-LIBS=$ac_check_lib_save_LIBS ;;
-esac
-fi
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_readline_readline" >&5
-printf "%s\n" "$ac_cv_lib_readline_readline" >&6; }
-if test "x$ac_cv_lib_readline_readline" = xyes
-then :
-  printf "%s\n" "#define HAVE_LIBREADLINE 1" >>confdefs.h
-
-  LIBS="-lreadline $LIBS"
-
-else case e in #(
-  e) coin_has_readline=no ;;
-esac
-fi
-
-    fi
-    if test $coin_has_readline = yes ; then
-      COINUTILSLIB_LFLAGS="$LIBS $COINUTILSLIB_LFLAGS"
-
-
-printf "%s\n" "#define COINUTILS_HAS_READLINE 1" >>confdefs.h
-
-    fi
-    LIBS="$coin_save_LIBS"
-  fi
-
-   if test x$coin_has_readline = xyes; then
-  COIN_HAS_READLINE_TRUE=
-  COIN_HAS_READLINE_FALSE='#'
-else
-  COIN_HAS_READLINE_TRUE='#'
-  COIN_HAS_READLINE_FALSE=
-fi
-
-
-
 # Finalize libs and cflags for building CoinUtilsLib.
 
    if test "$BUILDTOOLS_DEBUG" = 1 ; then
@@ -22965,7 +22535,6 @@ ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
 
 
 #############################################################################
@@ -23352,10 +22921,6 @@ if test -z "${COIN_HAS_LAPACK_TRUE}" && test -z "${COIN_HAS_LAPACK_FALSE}"; then
   as_fn_error $? "conditional \"COIN_HAS_LAPACK\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
-if test -z "${COIN_HAS_GLPK_TRUE}" && test -z "${COIN_HAS_GLPK_FALSE}"; then
-  as_fn_error $? "conditional \"COIN_HAS_GLPK\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
 if test -z "${COIN_HAS_ASL_TRUE}" && test -z "${COIN_HAS_ASL_FALSE}"; then
   as_fn_error $? "conditional \"COIN_HAS_ASL\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
@@ -23374,10 +22939,6 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COIN_HAS_BZLIB_TRUE}" && test -z "${COIN_HAS_BZLIB_FALSE}"; then
   as_fn_error $? "conditional \"COIN_HAS_BZLIB\" was never defined.
-Usually this means the macro was only invoked conditionally." "$LINENO" 5
-fi
-if test -z "${COIN_HAS_READLINE_TRUE}" && test -z "${COIN_HAS_READLINE_FALSE}"; then
-  as_fn_error $? "conditional \"COIN_HAS_READLINE\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${COIN_HAS_DOXYGEN_TRUE}" && test -z "${COIN_HAS_DOXYGEN_FALSE}"; then
