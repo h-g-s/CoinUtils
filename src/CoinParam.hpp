@@ -743,10 +743,6 @@ void readFromStream(std::deque<std::string> &inputQueue,
                     std::istream &inputStream);
 
 COINUTILSLIB_EXPORT
-void readInteractiveInput(std::deque<std::string> &inputQueue,
-                          const std::string &prompt);
-
-COINUTILSLIB_EXPORT
 std::string getNextField(std::deque<std::string> &inputQueue,
                          bool interactiveMode = false,
                          std::string prompt="");

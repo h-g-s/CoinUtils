@@ -69,39 +69,14 @@ readFromStream(std::deque<std::string> &inputQueue,
 // Get input from the interactive command prompt and pass it to readFromStrem
 //#############################################################################
 
-void
-readInteractiveInput(std::deque<std::string> &inputQueue,
-                     const std::string &prompt)
-{
-   std::string input;
-
-   while (!input.length()) {
-     std::cout << prompt;
-     fflush(stdout);
-     if (!getline(std::cin, input)) {
-       input = "end";
-       break;
-     }
-     if (!input.length())
-       std::cout << "Enter command, ? or end to exit." << std::endl;
-   }
-
-   std::istringstream inputStream(input);
-   CoinParamUtils::readFromStream(inputQueue, inputStream);
-}
-
 //#############################################################################
 // Get the next field from the input queue   
 //#############################################################################
 
 std::string
-getNextField(std::deque<std::string> &inputQueue, bool interactiveMode,
-             std::string prompt)
+getNextField(std::deque<std::string> &inputQueue, bool /*interactiveMode*/,
+             std::string /*prompt*/)
 {
-  if (inputQueue.empty() && interactiveMode){
-     CoinParamUtils::readInteractiveInput(inputQueue, prompt);
-  }
-
   if (inputQueue.empty()){
      return "";
   }else{
